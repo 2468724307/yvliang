@@ -105,7 +105,21 @@ fun HomeScreen(state: MainUiState, onPlan: () -> Unit, onRecord: () -> Unit, onT
                                 Text("●", color = AppColors.current.amber)
                                 Text("储蓄目标", style = MaterialTheme.typography.labelLarge)
                             }
-                            Text(if (dashboard.budget.savingGoalOnTrack) "存钱目标状态正常" else "按当前进度，存钱目标可能受影响")
+                            Text(
+                                if (dashboard.budget.savingGoalOnTrack) "存钱目标状态正常" else "提醒：按当前进度，存钱目标可能受影响",
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                            val risk = dashboard.budget.budgetRiskLevel
+                            Surface(
+                                color = when (risk) {
+                                    BudgetRiskLevel.SAFE -> AppColors.current.positiveContainer
+                                    BudgetRiskLevel.WARNING -> AppColors.current.warningContainer
+                                    BudgetRiskLevel.RISK -> AppColors.current.dangerContainer
+                                },
+                                shape = YuliangShapes.small,
+                            ) {
+                                Text(dashboard.budget.riskText(), Modifier.padding(Spacing.compact), color = MaterialTheme.colorScheme.onSurface)
+                            }
                         }
                     }
                 }
@@ -226,7 +240,17 @@ fun StatisticsScreen(state: MainUiState) {
                     Card(Modifier.fillMaxWidth()) { Column(Modifier.padding(Spacing.medium), verticalArrangement = Arrangement.spacedBy(Spacing.small)) {
                         Text("预算判断", style = MaterialTheme.typography.titleMedium)
                         Text(stats.prediction.label())
-                        Text(stats.riskLevel?.let { "风险状态：${it.riskText()}" } ?: "先建立本月计划以获得风险判断")
+                        val risk = stats.riskLevel
+                        if (risk == null) Text("先建立本月计划以获得风险判断") else Surface(
+                            color = when (risk) {
+                                BudgetRiskLevel.SAFE -> AppColors.current.positiveContainer
+                                BudgetRiskLevel.WARNING -> AppColors.current.warningContainer
+                                BudgetRiskLevel.RISK -> AppColors.current.dangerContainer
+                            },
+                            shape = YuliangShapes.small,
+                        ) {
+                            Text("预算状态：${risk.riskText()}", Modifier.padding(Spacing.compact), color = MaterialTheme.colorScheme.onSurface)
+                        }
                     } }
                 }
             }
