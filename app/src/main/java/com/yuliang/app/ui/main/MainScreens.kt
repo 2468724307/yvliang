@@ -275,7 +275,7 @@ fun ProfileScreen(
     onReduceMotion: (Boolean) -> Unit,
 ) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().testTag("profile_list"),
         contentPadding = PaddingValues(Spacing.content, Spacing.content, Spacing.content, 104.dp),
         verticalArrangement = Arrangement.spacedBy(Spacing.compact),
     ) {
