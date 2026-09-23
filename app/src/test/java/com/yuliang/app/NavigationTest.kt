@@ -6,6 +6,8 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.printToString
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
@@ -61,6 +63,7 @@ class NavigationTest {
         compose.onNodeWithTag("open_record").performClick()
         compose.onNodeWithTag("record_amount").performTextInput("12.34")
         compose.onNodeWithTag("save_record").performScrollTo().performClick()
+        println("AFTER_SAVE_ACTION=" + compose.onRoot(useUnmergedTree = true).printToString().take(16000))
         compose.waitUntil(timeoutMillis = 5_000) {
             compose.onAllNodesWithTag("open_record").fetchSemanticsNodes().isNotEmpty()
         }
