@@ -26,15 +26,6 @@ object Spacing {
     val section = 32.dp
 }
 
-object YuliangColors {
-    val Expense = Color(0xFFB6534D)
-    val Income = Color(0xFF237A66)
-    val Saving = Color(0xFF4D65A7)
-    val BudgetSafe = Color(0xFF3D8C78)
-    val BudgetWarning = Color(0xFFC18424)
-    val BudgetRisk = Color(0xFFB64D4D)
-}
-
 /** Semantic colors outside Material's standard roles. Use these in screens and charts. */
 data class YuliangPalette(
     val brandPressed: Color,

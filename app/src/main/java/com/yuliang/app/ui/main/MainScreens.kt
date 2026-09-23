@@ -412,7 +412,7 @@ fun TransactionDetailScreen(state: MainUiState, id: Long, onBack: () -> Unit, vm
             if (!transaction.note.isNullOrBlank()) Text(transaction.note)
             if (transaction.linkedFixedExpenseId == null) {
                 Button(onClick = { editing = true }, modifier = Modifier.fillMaxWidth()) { Text("编辑") }
-                TextButton(onClick = { confirmDelete = true }, modifier = Modifier.fillMaxWidth()) { Text("删除账单", color = MaterialTheme.colorScheme.error) }
+                TextButton(onClick = { confirmDelete = true }, modifier = Modifier.fillMaxWidth()) { Text("删除账单", color = MaterialTheme.colorScheme.onSurface) }
             } else Text("此账单由固定支出生成，请在固定支出中管理。")
         }
     }
