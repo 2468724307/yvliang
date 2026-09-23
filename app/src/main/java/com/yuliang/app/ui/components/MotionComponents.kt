@@ -127,15 +127,15 @@ fun TiltBudgetHero(
 ) {
     var touch by remember { mutableStateOf<Offset?>(null) }
     var cardSize by remember { mutableStateOf(androidx.compose.ui.geometry.Size.Zero) }
-    val targetX = touch?.let { ((it.y / cardSize.height.coerceAtLeast(1f)) - .5f) * -6f } ?: 0f
-    val targetY = touch?.let { ((it.x / cardSize.width.coerceAtLeast(1f)) - .5f) * 6f } ?: 0f
+    val targetX = touch?.let { ((it.y / cardSize.height.coerceAtLeast(1f)) - .5f) * -3f } ?: 0f
+    val targetY = touch?.let { ((it.x / cardSize.width.coerceAtLeast(1f)) - .5f) * 3f } ?: 0f
     val x by animateFloatAsState(if (reduceMotion) 0f else targetX, spring(dampingRatio = .72f), label = "tiltX")
     val y by animateFloatAsState(if (reduceMotion) 0f else targetY, spring(dampingRatio = .72f), label = "tiltY")
     val palette = AppColors.current
     Box(
         modifier = modifier
             .onSizeChanged { cardSize = androidx.compose.ui.geometry.Size(it.width.toFloat(), it.height.toFloat()) }
-            .graphicsLayer { rotationX = x.coerceIn(-3f, 3f); rotationY = y.coerceIn(-3f, 3f); cameraDistance = 18f * density }
+            .graphicsLayer { rotationX = x.coerceIn(-1.5f, 1.5f); rotationY = y.coerceIn(-1.5f, 1.5f); cameraDistance = 18f * density }
             .clip(RoundedCornerShape(30.dp))
             .background(Brush.verticalGradient(listOf(palette.heroStart, palette.heroEnd)))
             .pointerInput(reduceMotion) {

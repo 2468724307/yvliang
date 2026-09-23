@@ -5,6 +5,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -103,7 +105,12 @@ fun HomeScreen(state: MainUiState, onPlan: () -> Unit, onRecord: () -> Unit, onT
                                 BudgetRiskLevel.WARNING -> AppColors.current.warning
                                 BudgetRiskLevel.RISK -> AppColors.current.danger
                             }
-                            LinearProgressIndicator(progress = { dashboard.planProgress }, modifier = Modifier.fillMaxWidth(), color = budgetColor)
+                            val animatedProgress by animateFloatAsState(
+                                targetValue = dashboard.planProgress.coerceIn(0f, 1f),
+                                animationSpec = if (state.reduceMotion) snap() else tween(MotionTokens.Medium),
+                                label = "planProgress",
+                            )
+                            LinearProgressIndicator(progress = { animatedProgress }, modifier = Modifier.fillMaxWidth(), color = budgetColor)
                             Row(horizontalArrangement = Arrangement.spacedBy(Spacing.small)) {
                                 Text("●", color = AppColors.current.amber)
                                 Text("储蓄目标", style = MaterialTheme.typography.labelLarge)
