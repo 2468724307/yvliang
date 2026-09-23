@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.*
@@ -29,9 +30,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.dp
-import com.yuliang.app.domain.model.BudgetRiskLevel
+import com.yuliang.app.ui.theme.AppColors
 import com.yuliang.app.ui.theme.MotionTokens
-import com.yuliang.app.ui.theme.YuliangColors
 import java.math.BigDecimal
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -92,7 +92,6 @@ fun RollingMoney(cents: Long, modifier: Modifier = Modifier, reduceMotion: Boole
 
 @Composable
 fun TiltBudgetHero(
-    risk: BudgetRiskLevel,
     reduceMotion: Boolean,
     modifier: Modifier = Modifier,
     content: @Composable BoxScope.() -> Unit,
@@ -103,27 +102,13 @@ fun TiltBudgetHero(
     val targetY = touch?.let { ((it.x / cardSize.width.coerceAtLeast(1f)) - .5f) * 6f } ?: 0f
     val x by animateFloatAsState(if (reduceMotion) 0f else targetX, spring(dampingRatio = .72f), label = "tiltX")
     val y by animateFloatAsState(if (reduceMotion) 0f else targetY, spring(dampingRatio = .72f), label = "tiltY")
-    val base = when (risk) {
-        BudgetRiskLevel.SAFE -> YuliangColors.BudgetSafe
-        BudgetRiskLevel.WARNING -> YuliangColors.BudgetWarning
-        BudgetRiskLevel.RISK -> YuliangColors.BudgetRisk
-    }
-    val glowAlpha = if (reduceMotion) .10f else {
-        val transition = rememberInfiniteTransition(label = "budgetGlow")
-        transition.animateFloat(.09f, .16f, infiniteRepeatable(tween(2_400, easing = LinearEasing), RepeatMode.Reverse), label = "glow").value
-    }
+    val palette = AppColors.current
     Box(
         modifier = modifier
             .onSizeChanged { cardSize = androidx.compose.ui.geometry.Size(it.width.toFloat(), it.height.toFloat()) }
             .graphicsLayer { rotationX = x.coerceIn(-3f, 3f); rotationY = y.coerceIn(-3f, 3f); cameraDistance = 18f * density }
             .clip(RoundedCornerShape(30.dp))
-            .background(
-                Brush.radialGradient(
-                    colors = listOf(base.copy(alpha = glowAlpha), MaterialTheme.colorScheme.surfaceContainer),
-                    center = touch ?: Offset(cardSize.width / 2f, cardSize.height / 2f),
-                    radius = maxOf(cardSize.width, cardSize.height).coerceAtLeast(1f),
-                )
-            )
+            .background(Brush.verticalGradient(listOf(palette.heroStart, palette.heroEnd)))
             .pointerInput(reduceMotion) {
                 if (!reduceMotion) {
                     detectDragGestures(
@@ -134,6 +119,6 @@ fun TiltBudgetHero(
                 }
             }
             .fillMaxSize(),
-        content = content,
+        content = { CompositionLocalProvider(LocalContentColor provides androidx.compose.ui.graphics.Color.White) { content() } },
     )
 }

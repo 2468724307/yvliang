@@ -68,16 +68,16 @@ fun HomeScreen(state: MainUiState, onPlan: () -> Unit, onRecord: () -> Unit, onT
             is DashboardResult.Ready -> {
                 item {
                     Box(Modifier.fillMaxWidth().heightIn(min = 230.dp)) {
-                        TiltBudgetHero(dashboard.budget.budgetRiskLevel, state.reduceMotion, Modifier.matchParentSize()) {
+                        TiltBudgetHero(state.reduceMotion, Modifier.matchParentSize()) {
                             Column(Modifier.padding(Spacing.large), verticalArrangement = Arrangement.spacedBy(Spacing.small)) {
-                                Text("今日还能花", style = MaterialTheme.typography.titleMedium)
+                                Text("今日还能花", style = MaterialTheme.typography.titleMedium, color = Color.White.copy(alpha = .85f))
                                 RollingMoney(dashboard.budget.todayRemainingCents, reduceMotion = state.reduceMotion)
                                 if (dashboard.budget.todayOverspendCents > 0) {
-                                    Text("今日已超出建议 ${dashboard.budget.todayOverspendCents.money()}", color = YuliangColors.BudgetRisk)
+                                    Text("今日已超出建议 ${dashboard.budget.todayOverspendCents.money()}", color = Color.White)
                                 } else {
-                                    Text("今日建议 ${dashboard.budget.todayAllowanceCents.money()}")
+                                    Text("今日建议 ${dashboard.budget.todayAllowanceCents.money()}", color = Color.White.copy(alpha = .85f))
                                 }
-                                Text(dashboard.budget.riskText(), fontWeight = FontWeight.Medium)
+                                Text(dashboard.budget.riskText(), fontWeight = FontWeight.Medium, color = Color.White)
                             }
                         }
                     }
@@ -89,13 +89,17 @@ fun HomeScreen(state: MainUiState, onPlan: () -> Unit, onRecord: () -> Unit, onT
                     }
                 }
                 item {
-                    Card(Modifier.fillMaxWidth()) {
+                    Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
                         Column(Modifier.padding(Spacing.medium), verticalArrangement = Arrangement.spacedBy(Spacing.small)) {
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 Text("本月计划", style = MaterialTheme.typography.titleMedium)
                                 Text("剩余 ${dashboard.budget.monthRemainingCents.money()}")
                             }
                             LinearProgressIndicator(progress = { dashboard.planProgress }, modifier = Modifier.fillMaxWidth())
+                            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.small)) {
+                                Text("●", color = AppColors.current.amber)
+                                Text("储蓄目标", style = MaterialTheme.typography.labelLarge)
+                            }
                             Text(if (dashboard.budget.savingGoalOnTrack) "存钱目标状态正常" else "按当前进度，存钱目标可能受影响")
                         }
                     }
@@ -116,7 +120,7 @@ fun HomeScreen(state: MainUiState, onPlan: () -> Unit, onRecord: () -> Unit, onT
 }
 
 @Composable private fun MetricCard(label: String, value: String, modifier: Modifier = Modifier) {
-    Card(modifier) { Column(Modifier.padding(Spacing.medium), verticalArrangement = Arrangement.spacedBy(Spacing.tiny)) {
+    Card(modifier, colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) { Column(Modifier.padding(Spacing.medium), verticalArrangement = Arrangement.spacedBy(Spacing.tiny)) {
         Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(value, style = MaterialTheme.typography.titleLarge)
     } }
