@@ -65,18 +65,9 @@ fun YuliangBottomSheet(
     ) {
         Box(Modifier.fillMaxSize()) {
             Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = .38f)).clickable { onDismiss() })
-            var dragged by remember { mutableFloatStateOf(0f) }
             Column(
                 modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().wrapContentHeight()
                     .imePadding().navigationBarsPadding()
-                    .graphicsLayer { translationY = dragged }
-                    .pointerInput(visible) {
-                        detectVerticalDragGestures(
-                            onVerticalDrag = { _, delta -> dragged = (dragged + delta).coerceAtLeast(0f) },
-                            onDragEnd = { if (dragged > 100.dp.toPx()) onDismiss(); dragged = 0f },
-                            onDragCancel = { dragged = 0f },
-                        )
-                    }
                     .padding(PaddingValues(horizontal = 20.dp, vertical = 12.dp)),
                 content = content,
             )

@@ -12,6 +12,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
@@ -468,8 +469,17 @@ fun QuickRecordPanel(state: MainUiState, vm: MainViewModel, onDismiss: () -> Uni
         modifier = Modifier.fillMaxWidth().padding(Spacing.compact).animateContentSize(tween(if (state.reduceMotion) 0 else MotionTokens.Slow)),
     ) {
         Column(Modifier.padding(Spacing.content), verticalArrangement = Arrangement.spacedBy(Spacing.compact)) {
-            Box(Modifier.align(Alignment.CenterHorizontally).width(Spacing.spacious).height(Spacing.tiny)
-                .clip(YuliangShapes.pill).background(MaterialTheme.colorScheme.outlineVariant))
+            var sheetDrag by remember { mutableFloatStateOf(0f) }
+            Box(Modifier.fillMaxWidth().height(Spacing.large).pointerInput(onDismiss) {
+                detectVerticalDragGestures(
+                    onVerticalDrag = { _, delta -> sheetDrag = (sheetDrag + delta).coerceAtLeast(0f) },
+                    onDragEnd = { if (sheetDrag > 100.dp.toPx()) onDismiss(); sheetDrag = 0f },
+                    onDragCancel = { sheetDrag = 0f },
+                )
+            }, contentAlignment = Alignment.Center) {
+                Box(Modifier.width(Spacing.spacious).height(Spacing.tiny)
+                    .clip(YuliangShapes.pill).background(MaterialTheme.colorScheme.outlineVariant))
+            }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Text("记一笔", style = MaterialTheme.typography.titleLarge)
                 QuietActionButton(onClick = onDismiss) { Text("关闭") }
