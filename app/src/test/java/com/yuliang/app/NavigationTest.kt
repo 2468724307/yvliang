@@ -8,6 +8,7 @@ import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.performTextInput
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -53,5 +54,16 @@ class NavigationTest {
             compose.onAllNodesWithTag("open_record").fetchSemanticsNodes().isNotEmpty()
         }
         compose.onNodeWithTag("open_record").assertExists()
+    }
+
+    @Test fun quickRecordReturnsAfterPersistingToLedger() {
+        compose.onNodeWithTag("open_record").performClick()
+        compose.onNodeWithTag("record_amount").performTextInput("12.34")
+        compose.onNodeWithTag("save_record").performClick()
+        compose.waitUntil(timeoutMillis = 5_000) {
+            compose.onAllNodesWithTag("open_record").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithText("账单").performClick()
+        compose.onNodeWithText("−¥12.34").assertIsDisplayed()
     }
 }

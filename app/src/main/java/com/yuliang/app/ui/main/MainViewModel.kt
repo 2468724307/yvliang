@@ -32,6 +32,7 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
     private val export = MutableStateFlow<ExportPayload?>(null)
     private val _messages = MutableSharedFlow<String>(extraBufferCapacity = 8)
     val messages = _messages.asSharedFlow()
+    private var recording = false
 
     private data class Sources(
         val plan: MonthlyPlan?,
@@ -76,8 +77,24 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
-    fun addTransaction(type: TransactionType, amountCents: Long, categoryId: Long?, note: String?, occurredAt: Instant, allocation: IncomeAllocation?) = action("已记账") {
-        container.ledgerRepository.add(Transaction(type = type, amountCents = amountCents, occurredAt = occurredAt, incomeAllocation = allocation, categoryId = categoryId, note = note))
+    fun addTransaction(type: TransactionType, amountCents: Long, categoryId: Long?, note: String?, occurredAt: Instant, allocation: IncomeAllocation?, onResult: (Boolean) -> Unit = {}) {
+        if (recording) return
+        recording = true
+        viewModelScope.launch {
+            busy.value = true
+            val saved = try {
+                container.ledgerRepository.add(Transaction(type = type, amountCents = amountCents, occurredAt = occurredAt, incomeAllocation = allocation, categoryId = categoryId, note = note))
+                _messages.emit("已记账")
+                true
+            } catch (error: Exception) {
+                _messages.emit(error.message ?: "保存失败，请重试")
+                false
+            } finally {
+                recording = false
+                busy.value = false
+            }
+            onResult(saved)
+        }
     }
 
     fun updateTransaction(id: Long, type: TransactionType, amountCents: Long, categoryId: Long?, note: String?, occurredAt: Instant, allocation: IncomeAllocation?) = action("账单已更新") {

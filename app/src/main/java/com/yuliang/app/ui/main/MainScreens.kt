@@ -438,6 +438,7 @@ fun TransactionDetailScreen(state: MainUiState, id: Long, onBack: () -> Unit, vm
 @Composable
 fun QuickRecordPanel(state: MainUiState, vm: MainViewModel, onDismiss: () -> Unit) {
     var amount by remember { mutableStateOf("") }
+    var saving by remember { mutableStateOf(false) }
     var categoryId by remember { mutableStateOf<Long?>(state.categories.firstOrNull { it.isEnabled && it.type == TransactionType.EXPENSE }?.id) }
     var showMore by remember { mutableStateOf(false) }
     var note by remember { mutableStateOf("") }
@@ -495,13 +496,17 @@ fun QuickRecordPanel(state: MainUiState, vm: MainViewModel, onDismiss: () -> Uni
             }
             TextButton(onClick = { showMore = !showMore }) { Text(if (showMore) "收起更多" else "更多") }
             PressableButton(onClick = {
+                if (saving) return@PressableButton
                 if (cents == null || categoryId == null) vm.showMessage("请输入有效金额并选择分类")
                 else {
+                    saving = true
                     val occurredAt = selectedDate.atTime(LocalTime.now()).atZone(ZoneId.systemDefault()).toInstant()
-                    vm.addTransaction(type, cents, categoryId, note, occurredAt, if (type == TransactionType.INCOME) allocation else null)
-                    amount = ""; note = ""
+                    vm.addTransaction(type, cents, categoryId, note, occurredAt, if (type == TransactionType.INCOME) allocation else null) { saved ->
+                        saving = false
+                        if (saved) onDismiss()
+                    }
                 }
-            }, modifier = Modifier.fillMaxWidth().testTag("save_record"), enabled = !state.busy, reduceMotion = state.reduceMotion) { Text(if (state.busy) "保存中" else "保存") }
+            }, modifier = Modifier.fillMaxWidth().testTag("save_record"), enabled = !state.busy && !saving, reduceMotion = state.reduceMotion) { Text(if (saving || state.busy) "保存中" else "保存") }
         }
     }
     if (showDatePicker) DatePickerDialog(
