@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.*
@@ -47,6 +48,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun HomeScreen(state: MainUiState, onPlan: () -> Unit, onRecord: () -> Unit, onTransaction: (Long) -> Unit) {
     LazyColumn(
+        state = rememberLazyListState(),
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(Spacing.content, Spacing.content, Spacing.content, 112.dp),
         verticalArrangement = Arrangement.spacedBy(Spacing.medium),
@@ -169,6 +171,7 @@ fun BillsScreen(state: MainUiState, onTransaction: (Long) -> Unit) {
     val grouped = filtered.groupBy { it.date(ZoneId.systemDefault()) }.toSortedMap(reverseOrder())
     LazyColumn(
         modifier = Modifier.fillMaxSize().testTag("bills_list"),
+        state = rememberLazyListState(),
         contentPadding = PaddingValues(Spacing.content, Spacing.content, Spacing.content, 104.dp),
         verticalArrangement = Arrangement.spacedBy(Spacing.compact),
     ) {
@@ -209,6 +212,7 @@ private enum class BillDateFilter { ALL, THIS_MONTH, LAST_7_DAYS }
 @Composable
 fun StatisticsScreen(state: MainUiState) {
     LazyColumn(
+        state = rememberLazyListState(),
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(Spacing.content, Spacing.content, Spacing.content, 104.dp),
         verticalArrangement = Arrangement.spacedBy(Spacing.medium),
