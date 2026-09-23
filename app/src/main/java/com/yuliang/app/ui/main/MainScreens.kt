@@ -95,7 +95,12 @@ fun HomeScreen(state: MainUiState, onPlan: () -> Unit, onRecord: () -> Unit, onT
                                 Text("本月计划", style = MaterialTheme.typography.titleMedium)
                                 Text("剩余 ${dashboard.budget.monthRemainingCents.money()}")
                             }
-                            LinearProgressIndicator(progress = { dashboard.planProgress }, modifier = Modifier.fillMaxWidth())
+                            val budgetColor = when (dashboard.budget.budgetRiskLevel) {
+                                BudgetRiskLevel.SAFE -> MaterialTheme.colorScheme.primary
+                                BudgetRiskLevel.WARNING -> AppColors.current.warning
+                                BudgetRiskLevel.RISK -> AppColors.current.danger
+                            }
+                            LinearProgressIndicator(progress = { dashboard.planProgress }, modifier = Modifier.fillMaxWidth(), color = budgetColor)
                             Row(horizontalArrangement = Arrangement.spacedBy(Spacing.small)) {
                                 Text("●", color = AppColors.current.amber)
                                 Text("储蓄目标", style = MaterialTheme.typography.labelLarge)
@@ -209,7 +214,7 @@ fun StatisticsScreen(state: MainUiState) {
                 items(stats.categorySlices.take(6), key = { it.categoryId ?: -1L }) { slice ->
                     Column(verticalArrangement = Arrangement.spacedBy(Spacing.tiny)) {
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { Text(slice.label); Text(slice.amountCents.money()) }
-                        LinearProgressIndicator(progress = { slice.fraction }, modifier = Modifier.fillMaxWidth(), color = YuliangColors.Expense)
+                        LinearProgressIndicator(progress = { slice.fraction }, modifier = Modifier.fillMaxWidth(), color = AppColors.current.category(slice.label))
                     }
                 }
                 item {
@@ -232,6 +237,7 @@ fun StatisticsScreen(state: MainUiState) {
 @Composable private fun TrendChart(points: List<DailySpend>) {
     val max = points.maxOfOrNull { it.amountCents }?.coerceAtLeast(1) ?: 1
     val lineColor = MaterialTheme.colorScheme.primary
+    val gridColor = MaterialTheme.colorScheme.outline
     var selectedIndex by remember { mutableStateOf<Int?>(null) }
     var chartWidth by remember { mutableFloatStateOf(1f) }
     fun selectAt(x: Float) {
@@ -251,6 +257,10 @@ fun StatisticsScreen(state: MainUiState) {
                 .semantics { contentDescription = "本月每日消费趋势，共 ${points.count { it.amountCents > 0 }} 个消费日；可横向拖动查看日期金额" }
         ) {
             if (points.size < 2) return@Canvas
+            for (fraction in listOf(.25f, .5f, .75f)) {
+                val y = size.height * fraction
+                drawLine(gridColor, androidx.compose.ui.geometry.Offset(0f, y), androidx.compose.ui.geometry.Offset(size.width, y), strokeWidth = 1.dp.toPx())
+            }
             val path = Path()
             points.forEachIndexed { index, point ->
                 val x = size.width * index / (points.size - 1)
@@ -539,13 +549,14 @@ fun SimplePage(title: String, onBack: () -> Unit, content: @Composable ColumnSco
 private fun TransactionRow(tx: Transaction, categories: List<Category>, onClick: () -> Unit) {
     Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
         Row(Modifier.fillMaxWidth().padding(Spacing.medium), verticalAlignment = Alignment.CenterVertically) {
-            Text(categories.firstOrNull { it.id == tx.categoryId }?.icon ?: "·", style = MaterialTheme.typography.titleLarge)
+            val category = categories.firstOrNull { it.id == tx.categoryId }
+            Text(category?.icon ?: "·", style = MaterialTheme.typography.titleLarge, color = AppColors.current.category(category?.name ?: "其他"))
             Spacer(Modifier.width(Spacing.compact))
             Column(Modifier.weight(1f)) {
-                Text(categories.firstOrNull { it.id == tx.categoryId }?.name ?: "未分类", style = MaterialTheme.typography.titleMedium)
+                Text(category?.name ?: "未分类", style = MaterialTheme.typography.titleMedium)
                 Text(tx.note?.takeIf(String::isNotBlank) ?: tx.occurredAt.displayDate(), maxLines = 1, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            Text((if (tx.type == TransactionType.EXPENSE) "−" else "+") + tx.amountCents.money(), color = if (tx.type == TransactionType.EXPENSE) YuliangColors.Expense else YuliangColors.Income)
+            Text((if (tx.type == TransactionType.EXPENSE) "−" else "+") + tx.amountCents.money(), color = if (tx.type == TransactionType.EXPENSE) MaterialTheme.colorScheme.onSurface else AppColors.current.positive)
         }
     }
 }
