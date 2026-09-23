@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.ui.Alignment
@@ -114,9 +115,9 @@ fun PressableButton(
 @Composable
 fun RollingMoney(cents: Long, modifier: Modifier = Modifier, reduceMotion: Boolean = false) {
     if (reduceMotion) {
-        androidx.compose.material3.Text("¥" + BigDecimal.valueOf(cents, 2).toPlainString(), style = MaterialTheme.typography.displayLarge, modifier = modifier)
+        AmountText(cents, modifier, large = true, color = LocalContentColor.current)
     } else Crossfade(targetState = cents, modifier = modifier, animationSpec = tween(MotionTokens.Medium), label = "moneyChange") { value ->
-        androidx.compose.material3.Text("¥" + BigDecimal.valueOf(value, 2).toPlainString(), style = MaterialTheme.typography.displayLarge)
+        AmountText(value, large = true, color = LocalContentColor.current)
     }
 }
 
@@ -137,7 +138,7 @@ fun TiltBudgetHero(
         modifier = modifier
             .onSizeChanged { cardSize = androidx.compose.ui.geometry.Size(it.width.toFloat(), it.height.toFloat()) }
             .graphicsLayer { rotationX = x.coerceIn(-1.5f, 1.5f); rotationY = y.coerceIn(-1.5f, 1.5f); cameraDistance = 18f * density }
-            .clip(RoundedCornerShape(30.dp))
+            .clip(YuliangShapes.hero)
             .background(Brush.verticalGradient(listOf(palette.heroStart, palette.heroEnd)))
             .pointerInput(reduceMotion) {
                 if (!reduceMotion) {
@@ -148,7 +149,7 @@ fun TiltBudgetHero(
                     ) { change, _ -> touch = change.position }
                 }
             }
-            .fillMaxSize(),
+            .fillMaxWidth().heightIn(min = 200.dp),
         content = { CompositionLocalProvider(LocalContentColor provides androidx.compose.ui.graphics.Color.White) { content() } },
     )
 }

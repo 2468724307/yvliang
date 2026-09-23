@@ -27,7 +27,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.sp
 import com.yuliang.app.ui.theme.Spacing
 import com.yuliang.app.ui.theme.YuliangElevation
 import com.yuliang.app.ui.theme.YuliangShapes
@@ -69,7 +69,12 @@ fun DataCard(modifier: Modifier = Modifier, content: @Composable ColumnScope.() 
 
 @Composable
 fun AmountText(cents: Long, modifier: Modifier = Modifier, large: Boolean = false, color: Color = Color.Unspecified) {
-    val style = if (large) YuliangTypography.displayAmount else YuliangTypography.amountMedium
+    val length = cents.money().length
+    val base = if (large) YuliangTypography.displayAmount else YuliangTypography.amountMedium
+    val style = if (length > 17) base.copy(fontSize = 16.sp, lineHeight = 24.sp)
+        else if (length > 12) base.copy(fontSize = 20.sp, lineHeight = 28.sp)
+        else if (large && length > 9) base.copy(fontSize = 26.sp, lineHeight = 32.sp)
+        else base
     val text = cents.money()
     Text(buildAnnotatedString {
         withStyle(SpanStyle(fontSize = style.fontSize * .65f)) { append("¥") }

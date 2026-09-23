@@ -50,7 +50,7 @@ import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
 
 @Composable
-fun HomeScreen(state: MainUiState, onPlan: () -> Unit, onRecord: () -> Unit, onTransaction: (Long) -> Unit) {
+fun HomeScreen(state: MainUiState, onPlan: () -> Unit, onBills: () -> Unit, onTransaction: (Long) -> Unit) {
     LazyColumn(
         state = rememberLazyListState(),
         modifier = Modifier.fillMaxSize(),
@@ -59,22 +59,19 @@ fun HomeScreen(state: MainUiState, onPlan: () -> Unit, onRecord: () -> Unit, onT
     ) {
         item {
             Text("余量", style = MaterialTheme.typography.headlineLarge)
-            Text("先看今天，再决定怎么花", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("${LocalDate.now().format(DateTimeFormatter.ofPattern("M月d日"))} · 先看今天，再决定怎么花", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         when (val dashboard = state.dashboard) {
             DashboardResult.NoPlan -> item {
-                Card(Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(Spacing.large), verticalArrangement = Arrangement.spacedBy(Spacing.medium)) {
+                DataCard(Modifier.fillMaxWidth()) {
                         Text("先建立本月计划", style = MaterialTheme.typography.titleLarge)
                         Text("填入生活费、存钱目标和安全余额后，余量才能计算今天还能花多少。")
-                        PressableButton(onPlan, Modifier.fillMaxWidth(), reduceMotion = state.reduceMotion) { Text("开始设置") }
-                    }
+                        PrimaryActionButton(onPlan, Modifier.fillMaxWidth(), reduceMotion = state.reduceMotion) { Text("开始设置") }
                 }
             }
             is DashboardResult.Ready -> {
                 item {
-                    Box(Modifier.fillMaxWidth().heightIn(min = 230.dp)) {
-                        TiltBudgetHero(state.reduceMotion, Modifier.matchParentSize()) {
+                    TiltBudgetHero(state.reduceMotion, Modifier.fillMaxWidth()) {
                             Column(Modifier.padding(Spacing.large), verticalArrangement = Arrangement.spacedBy(Spacing.small)) {
                                 Text("今日还能花", style = MaterialTheme.typography.titleMedium, color = Color.White.copy(alpha = .85f))
                                 RollingMoney(dashboard.budget.todayRemainingCents, reduceMotion = state.reduceMotion)
@@ -85,7 +82,6 @@ fun HomeScreen(state: MainUiState, onPlan: () -> Unit, onRecord: () -> Unit, onT
                                 }
                                 Text(dashboard.budget.riskText(), fontWeight = FontWeight.Medium, color = Color.White)
                             }
-                        }
                     }
                 }
                 item {
@@ -95,8 +91,7 @@ fun HomeScreen(state: MainUiState, onPlan: () -> Unit, onRecord: () -> Unit, onT
                     }
                 }
                 item {
-                    Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-                        Column(Modifier.padding(Spacing.medium), verticalArrangement = Arrangement.spacedBy(Spacing.small)) {
+                    DataCard(Modifier.fillMaxWidth()) {
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 Text("本月计划", style = MaterialTheme.typography.titleMedium)
                                 Text("剩余 ${dashboard.budget.monthRemainingCents.money()}")
@@ -131,14 +126,10 @@ fun HomeScreen(state: MainUiState, onPlan: () -> Unit, onRecord: () -> Unit, onT
                             ) {
                                 Text(dashboard.budget.riskText(), Modifier.padding(Spacing.compact), color = MaterialTheme.colorScheme.onSurface)
                             }
-                        }
                     }
                 }
                 item {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Text("最近账单", style = MaterialTheme.typography.titleLarge)
-                        TextButton(onClick = onRecord) { Text("＋ 记一笔") }
-                    }
+                    SectionHeader("最近账单", action = "查看全部", onAction = onBills)
                 }
                 if (dashboard.recentTransactions.isEmpty()) item { EmptyCard("还没有账单，记下第一笔消费吧。") }
                 else itemsIndexed(dashboard.recentTransactions, key = { _, item -> item.id }) { index, tx ->
@@ -150,10 +141,10 @@ fun HomeScreen(state: MainUiState, onPlan: () -> Unit, onRecord: () -> Unit, onT
 }
 
 @Composable private fun MetricCard(label: String, value: String, modifier: Modifier = Modifier) {
-    Card(modifier, colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) { Column(Modifier.padding(Spacing.medium), verticalArrangement = Arrangement.spacedBy(Spacing.tiny)) {
-        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(value, style = MaterialTheme.typography.titleLarge)
-    } }
+    DataCard(modifier) {
+        Text(label, style = YuliangTypography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(value, style = if (value.startsWith("¥")) YuliangTypography.amountMedium else YuliangTypography.bodyMedium, maxLines = 3)
+    }
 }
 
 @Composable private fun EmptyCard(text: String) = Card(Modifier.fillMaxWidth()) { Text(text, Modifier.padding(Spacing.large)) }

@@ -108,7 +108,7 @@ fun YuliangApp() {
                 popEnterTransition = { fadeIn(tween(transitionMs)) + scaleIn(tween(transitionMs), initialScale = 1.01f) },
                 popExitTransition = { fadeOut(tween(transitionMs / 2)) + scaleOut(tween(transitionMs / 2), targetScale = .985f) },
             ) {
-                composable("home") { HomeScreen(effectiveState, { nav.navigate("plan") }, { recordOpen = true }) { nav.navigate("transaction/$it") } }
+                composable("home") { HomeScreen(effectiveState, { nav.navigate("plan") }, { nav.navigate("bills") }) { nav.navigate("transaction/$it") } }
                 composable("bills") { BillsScreen(effectiveState) { nav.navigate("transaction/$it") } }
                 composable("statistics") { StatisticsScreen(effectiveState) }
                 composable("profile") { ProfileScreen(effectiveState, { nav.navigate("plan") }, { nav.navigate("fixed") }, { nav.navigate("categories") }, { nav.navigate("data") }, { nav.navigate("about") }, mainVm::setReduceMotion) }
