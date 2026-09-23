@@ -8,6 +8,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.snap
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.*
@@ -176,7 +178,7 @@ fun BillsScreen(state: MainUiState, onTransaction: (Long) -> Unit) {
         verticalArrangement = Arrangement.spacedBy(Spacing.compact),
     ) {
         item { Text("全部账单", style = MaterialTheme.typography.headlineLarge) }
-        item { OutlinedTextField(query, { query = it }, label = { Text("搜索备注或分类") }, singleLine = true, modifier = Modifier.fillMaxWidth(), colors = appTextFieldColors()) }
+        item { AppTextInput(query, { query = it }, "搜索备注或分类", modifier = Modifier.fillMaxWidth()) }
         item {
             LazyRow(horizontalArrangement = Arrangement.spacedBy(Spacing.small)) {
                 item { FilterChip(type == null, { type = null }, { Text("全部") }) }
@@ -199,7 +201,7 @@ fun BillsScreen(state: MainUiState, onTransaction: (Long) -> Unit) {
         }
         if (filtered.isEmpty()) item { EmptyCard("没有符合条件的账单。") }
         grouped.forEach { (date, rows) ->
-            item(key = "header-$date") { Text(date.format(DateTimeFormatter.ofPattern("M月d日 EEEE")), style = MaterialTheme.typography.titleMedium) }
+            item(key = "header-$date") { Text(date.format(DateTimeFormatter.ofPattern("M月d日 EEEE")), style = YuliangTypography.label, color = MaterialTheme.colorScheme.onSurfaceVariant) }
             itemsIndexed(rows, key = { _, item -> item.id }) { index, tx ->
                 StaggeredItem(index, !state.reduceMotion) { TransactionRow(tx, state.categories) { onTransaction(tx.id) } }
             }
@@ -580,16 +582,24 @@ fun SimplePage(title: String, onBack: () -> Unit, content: @Composable ColumnSco
 
 @Composable
 private fun TransactionRow(tx: Transaction, categories: List<Category>, onClick: () -> Unit) {
-    Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
-        Row(Modifier.fillMaxWidth().padding(Spacing.medium), verticalAlignment = Alignment.CenterVertically) {
+    Card(onClick = onClick, modifier = Modifier.fillMaxWidth(), shape = YuliangShapes.medium,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+        elevation = CardDefaults.cardElevation(defaultElevation = YuliangElevation.flat)) {
+        Row(Modifier.fillMaxWidth().heightIn(min = YuliangSizes.listItem).padding(horizontal = Spacing.medium, vertical = Spacing.small), verticalAlignment = Alignment.CenterVertically) {
             val category = categories.firstOrNull { it.id == tx.categoryId }
-            Text(category?.icon ?: "·", style = MaterialTheme.typography.titleLarge, color = AppColors.current.category(category?.name ?: "其他"))
+            Box(Modifier.size(Spacing.spacious).clip(YuliangShapes.medium)
+                .background(AppColors.current.category(category?.name ?: "其他").copy(alpha = .14f)), contentAlignment = Alignment.Center) {
+                Text(category?.icon ?: "·", style = YuliangTypography.titleSmall)
+            }
             Spacer(Modifier.width(Spacing.compact))
             Column(Modifier.weight(1f)) {
-                Text(category?.name ?: "未分类", style = MaterialTheme.typography.titleMedium)
-                Text(tx.note?.takeIf(String::isNotBlank) ?: tx.occurredAt.displayDate(), maxLines = 1, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(category?.name ?: "未分类", style = YuliangTypography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(tx.note?.takeIf(String::isNotBlank) ?: tx.occurredAt.displayDate(), style = YuliangTypography.caption, maxLines = 1, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            Text((if (tx.type == TransactionType.EXPENSE) "−" else "+") + tx.amountCents.money(), color = if (tx.type == TransactionType.EXPENSE) MaterialTheme.colorScheme.onSurface else AppColors.current.positive)
+            Text((if (tx.type == TransactionType.EXPENSE) "−" else "+") + tx.amountCents.money(),
+                style = YuliangTypography.label.copy(fontFeatureSettings = "tnum"),
+                color = if (tx.type == TransactionType.EXPENSE) MaterialTheme.colorScheme.onSurface else AppColors.current.positive)
         }
     }
 }
