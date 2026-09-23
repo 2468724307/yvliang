@@ -123,7 +123,7 @@ fun YuliangApp() {
             }
         }
 
-        YuliangBottomSheet(visible = recordOpen, onDismiss = { recordOpen = false }) {
+        YuliangBottomSheet(visible = recordOpen, onDismiss = { recordOpen = false }, reduceMotion = effectiveState.reduceMotion) {
             QuickRecordPanel(effectiveState, mainVm) { recordOpen = false }
         }
     }
