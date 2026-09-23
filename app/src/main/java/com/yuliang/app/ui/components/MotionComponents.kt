@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -63,10 +64,10 @@ fun YuliangBottomSheet(
         enter = fadeIn(tween(if (reduceMotion) 0 else MotionTokens.Medium)),
         exit = fadeOut(tween(if (reduceMotion) 0 else MotionTokens.Fast)),
     ) {
-        Box(Modifier.fillMaxSize()) {
-            Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = .38f)).clickable { onDismiss() })
+        Column(Modifier.fillMaxSize().background(Color.Black.copy(alpha = .38f))) {
+            Spacer(Modifier.fillMaxWidth().weight(1f).clickable { onDismiss() })
             Column(
-                modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().wrapContentHeight()
+                modifier = Modifier.fillMaxWidth().wrapContentHeight()
                     .imePadding().navigationBarsPadding()
                     .padding(PaddingValues(horizontal = 20.dp, vertical = 12.dp)),
                 content = content,
