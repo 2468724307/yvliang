@@ -224,27 +224,29 @@ fun StatisticsScreen(state: MainUiState) {
             StatisticsResult.Empty -> item { EmptyCard("本月还没有可统计的消费。记录几笔后，这里会显示分类与趋势。") }
             is StatisticsResult.Content -> {
                 item {
-                    Card(Modifier.fillMaxWidth()) { Column(Modifier.padding(Spacing.large)) {
+                    DataCard(Modifier.fillMaxWidth()) {
                         Text("本月支出", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        RollingMoney(stats.totalExpenseCents, reduceMotion = state.reduceMotion)
-                        Text("最高消费分类：${stats.topCategory}；近期有效消费日日均 ${stats.recentDailyAverageCents.money()}。")
-                    } }
+                        RollingMoney(stats.totalExpenseCents, reduceMotion = state.reduceMotion, headline = true)
+                        Text("最高消费分类：${stats.topCategory}；近期有效消费日日均 ${stats.recentDailyAverageCents.money()}。", style = YuliangTypography.bodyMedium)
+                    }
                 }
-                item { Text("钱花到哪里", style = MaterialTheme.typography.titleLarge) }
+                item { SectionHeader("钱花到哪里") }
                 items(stats.categorySlices.take(6), key = { it.categoryId ?: -1L }) { slice ->
                     Column(verticalArrangement = Arrangement.spacedBy(Spacing.tiny)) {
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { Text(slice.label); Text(slice.amountCents.money()) }
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { Text(slice.label, style = YuliangTypography.bodyMedium); Text(slice.amountCents.money(), style = YuliangTypography.label.copy(fontFeatureSettings = "tnum")) }
                         LinearProgressIndicator(progress = { slice.fraction }, modifier = Modifier.fillMaxWidth(), color = AppColors.current.category(slice.label))
                     }
                 }
                 item {
-                    Text("每日趋势", style = MaterialTheme.typography.titleLarge)
-                    TrendChart(stats.dailyTrend)
-                    Text(stats.trendSummary())
+                    DataCard(Modifier.fillMaxWidth()) {
+                        SectionHeader("每日趋势")
+                        TrendChart(stats.dailyTrend)
+                        Text(stats.trendSummary(), style = YuliangTypography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                 }
                 item {
-                    Card(Modifier.fillMaxWidth()) { Column(Modifier.padding(Spacing.medium), verticalArrangement = Arrangement.spacedBy(Spacing.small)) {
-                        Text("预算判断", style = MaterialTheme.typography.titleMedium)
+                    DataCard(Modifier.fillMaxWidth()) {
+                        SectionHeader("预算判断")
                         Text(stats.prediction.label())
                         val risk = stats.riskLevel
                         if (risk == null) Text("先建立本月计划以获得风险判断") else Surface(
@@ -257,7 +259,7 @@ fun StatisticsScreen(state: MainUiState) {
                         ) {
                             Text("预算状态：${risk.riskText()}", Modifier.padding(Spacing.compact), color = MaterialTheme.colorScheme.onSurface)
                         }
-                    } }
+                    }
                 }
             }
         }

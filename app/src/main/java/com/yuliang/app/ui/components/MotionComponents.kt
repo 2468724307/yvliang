@@ -113,11 +113,11 @@ fun PressableButton(
 }
 
 @Composable
-fun RollingMoney(cents: Long, modifier: Modifier = Modifier, reduceMotion: Boolean = false) {
+fun RollingMoney(cents: Long, modifier: Modifier = Modifier, reduceMotion: Boolean = false, headline: Boolean = false) {
     if (reduceMotion) {
-        AmountText(cents, modifier, large = true, color = LocalContentColor.current)
+        AmountText(cents, modifier, large = !headline, headline = headline, color = LocalContentColor.current)
     } else Crossfade(targetState = cents, modifier = modifier, animationSpec = tween(MotionTokens.Medium), label = "moneyChange") { value ->
-        AmountText(value, large = true, color = LocalContentColor.current)
+        AmountText(value, large = !headline, headline = headline, color = LocalContentColor.current)
     }
 }
 

@@ -68,9 +68,9 @@ fun DataCard(modifier: Modifier = Modifier, content: @Composable ColumnScope.() 
 }
 
 @Composable
-fun AmountText(cents: Long, modifier: Modifier = Modifier, large: Boolean = false, color: Color = Color.Unspecified) {
+fun AmountText(cents: Long, modifier: Modifier = Modifier, large: Boolean = false, headline: Boolean = false, color: Color = Color.Unspecified) {
     val length = cents.money().length
-    val base = if (large) YuliangTypography.displayAmount else YuliangTypography.amountMedium
+    val base = if (large) YuliangTypography.displayAmount else if (headline) YuliangTypography.amountLarge else YuliangTypography.amountMedium
     val style = if (length > 17) base.copy(fontSize = 16.sp, lineHeight = 24.sp)
         else if (length > 12) base.copy(fontSize = 20.sp, lineHeight = 28.sp)
         else if (large && length > 9) base.copy(fontSize = 26.sp, lineHeight = 32.sp)
