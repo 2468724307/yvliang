@@ -592,10 +592,12 @@ private fun TransactionRow(tx: Transaction, categories: List<Category>, onClick:
 
 @Composable
 private fun StaggeredItem(index: Int, enabled: Boolean, content: @Composable () -> Unit) {
-    var visible by rememberSaveable { mutableStateOf(!enabled) }
+    val animate = enabled && index < 4
+    var visible by rememberSaveable { mutableStateOf(!animate) }
     LaunchedEffect(enabled) {
-        if (enabled && !visible) {
-            delay((index.coerceAtMost(6) * MotionTokens.StaggerDelay).toLong())
+        if (!animate) visible = true
+        else if (!visible) {
+            delay((index * MotionTokens.StaggerDelay).toLong())
             visible = true
         }
     }

@@ -6,6 +6,7 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.clickable
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.activity.compose.BackHandler
@@ -111,16 +112,11 @@ fun PressableButton(
 
 @Composable
 fun RollingMoney(cents: Long, modifier: Modifier = Modifier, reduceMotion: Boolean = false) {
-    val animated by animateFloatAsState(
-        targetValue = cents.toFloat(),
-        animationSpec = if (reduceMotion) snap() else tween(MotionTokens.Medium, easing = FastOutSlowInEasing),
-        label = "rollingMoney",
-    )
-    androidx.compose.material3.Text(
-        text = "¥" + BigDecimal.valueOf(animated.toLong(), 2).setScale(2).toPlainString(),
-        style = MaterialTheme.typography.displayLarge,
-        modifier = modifier,
-    )
+    if (reduceMotion) {
+        androidx.compose.material3.Text("¥" + BigDecimal.valueOf(cents, 2).toPlainString(), style = MaterialTheme.typography.displayLarge, modifier = modifier)
+    } else Crossfade(targetState = cents, modifier = modifier, animationSpec = tween(MotionTokens.Medium), label = "moneyChange") { value ->
+        androidx.compose.material3.Text("¥" + BigDecimal.valueOf(value, 2).toPlainString(), style = MaterialTheme.typography.displayLarge)
+    }
 }
 
 @Composable
