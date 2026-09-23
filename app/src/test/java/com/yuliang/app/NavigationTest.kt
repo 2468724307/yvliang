@@ -4,6 +4,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
@@ -48,6 +49,9 @@ class NavigationTest {
         compose.onNodeWithTag("open_record").assertIsDisplayed().performClick()
         compose.onNodeWithTag("record_amount").assertIsDisplayed()
         compose.onNodeWithText("关闭").performClick()
+        compose.waitUntil(timeoutMillis = 5_000) {
+            compose.onAllNodesWithTag("open_record").fetchSemanticsNodes().isNotEmpty()
+        }
         compose.onNodeWithTag("open_record").assertExists()
     }
 }
