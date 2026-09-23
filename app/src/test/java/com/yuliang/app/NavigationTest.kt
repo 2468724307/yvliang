@@ -64,7 +64,14 @@ class NavigationTest {
             compose.onAllNodesWithTag("open_record").fetchSemanticsNodes().isNotEmpty()
         }
         compose.onNodeWithText("账单").performClick()
-        compose.onNodeWithTag("bills_list").performScrollToNode(hasText("−¥12.34"))
+        compose.waitUntil(timeoutMillis = 10_000) {
+            try {
+                compose.onNodeWithTag("bills_list").performScrollToNode(hasText("−¥12.34"))
+                true
+            } catch (_: AssertionError) {
+                false // Room emits the saved transaction after the sheet closes.
+            }
+        }
         compose.onNodeWithText("−¥12.34").assertIsDisplayed()
     }
 
