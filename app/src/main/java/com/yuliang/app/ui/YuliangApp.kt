@@ -25,6 +25,7 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.*
 import com.yuliang.app.YuliangApplication
 import com.yuliang.app.ui.main.*
+import com.yuliang.app.ui.components.YuliangBottomSheet
 import com.yuliang.app.ui.plan.FixedExpenseScreen
 import com.yuliang.app.ui.plan.MonthlyPlanScreen
 import com.yuliang.app.ui.plan.PlanViewModel
@@ -122,12 +123,7 @@ fun YuliangApp() {
             }
         }
 
-        AnimatedVisibility(
-            visible = recordOpen,
-            modifier = Modifier.align(Alignment.BottomCenter).imePadding().navigationBarsPadding(),
-            enter = fadeIn() + slideInVertically { it / 2 },
-            exit = fadeOut() + slideOutVertically { it / 2 },
-        ) {
+        YuliangBottomSheet(visible = recordOpen, onDismiss = { recordOpen = false }) {
             QuickRecordPanel(effectiveState, mainVm) { recordOpen = false }
         }
     }

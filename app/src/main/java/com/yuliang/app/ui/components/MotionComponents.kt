@@ -21,6 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,7 +45,12 @@ fun YuliangBottomSheet(
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    if (visible) ModalBottomSheet(onDismissRequest = onDismiss, modifier = modifier) {
+    if (visible) ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        modifier = modifier,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = MaterialTheme.colorScheme.surface,
+    ) {
         Column(
             modifier = Modifier.navigationBarsPadding().padding(PaddingValues(horizontal = 20.dp, vertical = 12.dp)),
             content = content,
