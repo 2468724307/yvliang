@@ -331,8 +331,8 @@ fun ProfileScreen(
         item { SettingRow("分类管理", "新增或归档收入与支出分类", onCategories) }
         item { SettingRow("数据管理", "备份、恢复、CSV 导出与分享", onData) }
         item {
-            Card(Modifier.fillMaxWidth()) { Row(Modifier.fillMaxWidth().padding(Spacing.medium), verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) { Text("减少动画", style = MaterialTheme.typography.titleMedium); Text("关闭 3D 微倾、弹簧与交错入场") }
+            DataCard(Modifier.fillMaxWidth()) { Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) { Text("减少动画", style = YuliangTypography.titleSmall); Text("减少界面动态效果", style = YuliangTypography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                 Switch(state.reduceMotion, onReduceMotion)
             } }
         }
@@ -347,19 +347,19 @@ fun CategoryManagementScreen(state: MainUiState, vm: MainViewModel, onBack: () -
     var type by rememberSaveable { mutableStateOf(TransactionType.EXPENSE) }
     SimplePage("分类管理", onBack) {
         Text("归档分类不会删除历史账单中的分类引用。", color = MaterialTheme.colorScheme.onSurfaceVariant)
-        OutlinedTextField(name, { name = it.take(12) }, label = { Text("分类名称") }, singleLine = true, modifier = Modifier.fillMaxWidth(), colors = appTextFieldColors())
-        OutlinedTextField(icon, { icon = it.take(2) }, label = { Text("图标或符号") }, singleLine = true, modifier = Modifier.fillMaxWidth(), colors = appTextFieldColors())
+        AppTextInput(name, { name = it.take(12) }, "分类名称", modifier = Modifier.fillMaxWidth())
+        AppTextInput(icon, { icon = it.take(2) }, "图标或符号", modifier = Modifier.fillMaxWidth())
         Row(horizontalArrangement = Arrangement.spacedBy(Spacing.small)) {
             FilterChip(type == TransactionType.EXPENSE, { type = TransactionType.EXPENSE }, { Text("支出") })
             FilterChip(type == TransactionType.INCOME, { type = TransactionType.INCOME }, { Text("收入") })
         }
-        Button(onClick = {
+        PrimaryActionButton(onClick = {
             if (name.isBlank()) vm.showMessage("请填写分类名称") else { vm.addCategory(name, icon, type); name = "" }
         }, enabled = !state.busy, modifier = Modifier.fillMaxWidth()) { Text("添加分类") }
         HorizontalDivider()
         state.categories.forEach { category ->
-            Card(Modifier.fillMaxWidth()) {
-                Row(Modifier.fillMaxWidth().padding(Spacing.medium), verticalAlignment = Alignment.CenterVertically) {
+            DataCard(Modifier.fillMaxWidth()) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Text(category.icon, style = MaterialTheme.typography.titleLarge)
                     Spacer(Modifier.width(Spacing.compact))
                     Column(Modifier.weight(1f)) { Text(category.name); Text(category.type.label(), color = MaterialTheme.colorScheme.onSurfaceVariant) }
@@ -372,8 +372,11 @@ fun CategoryManagementScreen(state: MainUiState, vm: MainViewModel, onBack: () -
 }
 
 @Composable private fun SettingRow(title: String, subtitle: String, onClick: () -> Unit) {
-    Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(Spacing.medium)) { Text(title, style = MaterialTheme.typography.titleMedium); Text(subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+    Card(onClick = onClick, modifier = Modifier.fillMaxWidth().heightIn(min = YuliangSizes.listItem),
+        shape = YuliangShapes.card, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = YuliangElevation.flat)) {
+        Column(Modifier.padding(Spacing.medium)) { Text(title, style = YuliangTypography.titleSmall); Text(subtitle, style = YuliangTypography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
     }
 }
 
@@ -393,17 +396,17 @@ fun TransactionDetailScreen(state: MainUiState, id: Long, onBack: () -> Unit, vm
     SimplePage("账单详情", onBack) {
         Text(transaction.type.label(), style = MaterialTheme.typography.titleMedium)
         if (editing) {
-            OutlinedTextField(amount, { amount = it.filter { c -> c.isDigit() || c == '.' } }, label = { Text("金额（元）") }, modifier = Modifier.fillMaxWidth(), colors = appTextFieldColors())
-            OutlinedTextField(note, { note = it }, label = { Text("备注") }, modifier = Modifier.fillMaxWidth(), colors = appTextFieldColors())
+            AmountInput(amount, { amount = it }, "金额", modifier = Modifier.fillMaxWidth(), prominent = true)
+            AppTextInput(note, { note = it }, "备注", modifier = Modifier.fillMaxWidth())
             LazyRow(horizontalArrangement = Arrangement.spacedBy(Spacing.small)) {
                 items(state.categories.filter { (it.isEnabled || it.id == transaction.categoryId) && it.type == transaction.type }, key = { it.id }) { category ->
                     FilterChip(editCategoryId == category.id, { editCategoryId = category.id }, { Text(category.name) })
                 }
             }
-            OutlinedButton(onClick = { showEditDatePicker = true }, modifier = Modifier.fillMaxWidth()) {
+            SecondaryActionButton(onClick = { showEditDatePicker = true }, modifier = Modifier.fillMaxWidth()) {
                 Text("日期：${editDate.format(DateTimeFormatter.ofPattern("yyyy年M月d日"))}")
             }
-            PressableButton(onClick = {
+            PrimaryActionButton(onClick = {
                 val cents = yuanToCentsOrNull(amount)
                 if (cents == null) vm.showMessage("请输入有效正数金额，最多两位小数")
                 else {
@@ -414,13 +417,13 @@ fun TransactionDetailScreen(state: MainUiState, id: Long, onBack: () -> Unit, vm
                 }
             }, modifier = Modifier.fillMaxWidth(), reduceMotion = state.reduceMotion) { Text("保存修改") }
         } else {
-            Text(transaction.amountCents.money(), style = MaterialTheme.typography.displayLarge)
+            AmountText(transaction.amountCents, large = true)
             Text(state.categories.firstOrNull { it.id == transaction.categoryId }?.name ?: "未分类")
             Text(transaction.occurredAt.displayDate())
             if (!transaction.note.isNullOrBlank()) Text(transaction.note)
             if (transaction.linkedFixedExpenseId == null) {
-                Button(onClick = { editing = true }, modifier = Modifier.fillMaxWidth()) { Text("编辑") }
-                TextButton(onClick = { confirmDelete = true }, modifier = Modifier.fillMaxWidth()) { Text("删除账单", color = MaterialTheme.colorScheme.onSurface) }
+                SecondaryActionButton(onClick = { editing = true }, modifier = Modifier.fillMaxWidth()) { Text("编辑") }
+                QuietActionButton(onClick = { confirmDelete = true }, modifier = Modifier.fillMaxWidth()) { Text("删除账单", color = MaterialTheme.colorScheme.error) }
             } else Text("此账单由固定支出生成，请在固定支出中管理。")
         }
     }

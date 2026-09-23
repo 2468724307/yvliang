@@ -26,18 +26,19 @@ import androidx.navigation.compose.*
 import com.yuliang.app.YuliangApplication
 import com.yuliang.app.ui.main.*
 import com.yuliang.app.ui.components.YuliangBottomSheet
+import com.yuliang.app.ui.components.YuliangIcon
 import com.yuliang.app.ui.plan.FixedExpenseScreen
 import com.yuliang.app.ui.plan.MonthlyPlanScreen
 import com.yuliang.app.ui.plan.PlanViewModel
 import com.yuliang.app.ui.theme.MotionTokens
 import com.yuliang.app.ui.theme.AppColors
 
-private data class MainDestination(val route: String, val label: String, val mark: String)
+private data class MainDestination(val route: String, val label: String, val icon: YuliangIcon)
 private val mainDestinations = listOf(
-    MainDestination("home", "首页", "○"),
-    MainDestination("bills", "账单", "≡"),
-    MainDestination("statistics", "统计", "⌁"),
-    MainDestination("profile", "我的", "◇"),
+    MainDestination("home", "首页", YuliangIcon.HOME),
+    MainDestination("bills", "账单", YuliangIcon.BILLS),
+    MainDestination("statistics", "统计", YuliangIcon.STATISTICS),
+    MainDestination("profile", "我的", YuliangIcon.PROFILE),
 )
 
 @Composable
@@ -74,7 +75,7 @@ fun YuliangApp() {
                                     restoreState = true
                                 }
                             },
-                            icon = { Text(destination.mark) },
+                            icon = { com.yuliang.app.ui.components.YuliangIcon(destination.icon) },
                             label = { Text(destination.label) },
                             colors = NavigationBarItemDefaults.colors(
                                 selectedIconColor = MaterialTheme.colorScheme.primary,
@@ -91,8 +92,8 @@ fun YuliangApp() {
                 if (isMain && !recordOpen) ExtendedFloatingActionButton(
                     onClick = { recordOpen = true },
                     modifier = Modifier.testTag("open_record"),
-                    text = { Text("＋ 记一笔") },
-                    icon = {},
+                    text = { Text("记一笔") },
+                    icon = { com.yuliang.app.ui.components.YuliangIcon(YuliangIcon.ADD) },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
                 )
