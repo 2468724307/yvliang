@@ -62,7 +62,9 @@ class NavigationTest {
     @Test fun quickRecordReturnsAfterPersistingToLedger() {
         compose.onNodeWithTag("open_record").performClick()
         compose.onNodeWithTag("record_amount").performTextInput("12.34")
-        compose.onNodeWithTag("save_record").performScrollTo().performClick()
+        compose.onNodeWithTag("save_record").performScrollTo()
+        println("BEFORE_SAVE_ACTION=" + compose.onRoot(useUnmergedTree = true).printToString().take(16000))
+        compose.onNodeWithTag("save_record").performClick()
         println("AFTER_SAVE_ACTION=" + compose.onRoot(useUnmergedTree = true).printToString().take(16000))
         compose.waitUntil(timeoutMillis = 5_000) {
             compose.onAllNodesWithTag("open_record").fetchSemanticsNodes().isNotEmpty()
