@@ -44,6 +44,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.dp
 import com.yuliang.app.ui.theme.AppColors
 import com.yuliang.app.ui.theme.MotionTokens
+import com.yuliang.app.ui.theme.YuliangShapes
 import java.math.BigDecimal
 
 @Composable
@@ -103,7 +104,7 @@ fun PressableButton(
         onClick = { if (!reduceMotion) haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onClick() },
         enabled = enabled,
         interactionSource = interaction,
-        shape = RoundedCornerShape(50),
+        shape = YuliangShapes.card,
         colors = ButtonDefaults.buttonColors(containerColor = if (pressed) palette.brandPressed else MaterialTheme.colorScheme.primary),
         modifier = modifier.graphicsLayer { scaleX = scale; scaleY = scale },
         content = content,

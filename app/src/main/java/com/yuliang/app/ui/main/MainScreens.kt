@@ -480,9 +480,9 @@ fun QuickRecordPanel(state: MainUiState, vm: MainViewModel, onDismiss: () -> Uni
         Column(Modifier.padding(Spacing.content), verticalArrangement = Arrangement.spacedBy(Spacing.compact)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Text("记一笔", style = MaterialTheme.typography.titleLarge)
-                TextButton(onClick = onDismiss) { Text("关闭") }
+                QuietActionButton(onClick = onDismiss) { Text("关闭") }
             }
-            OutlinedTextField(amount, { amount = it.filter { c -> c.isDigit() || c == '.' } }, label = { Text("金额（元）") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("record_amount"), colors = appTextFieldColors())
+            AmountInput(amount, { amount = it }, "金额", modifier = Modifier.fillMaxWidth().testTag("record_amount"), prominent = true)
             LazyRow(horizontalArrangement = Arrangement.spacedBy(Spacing.small)) {
                 items(state.categories.filter { it.isEnabled && it.type == type }, key = { it.id }) { category ->
                     FilterChip(categoryId == category.id, { categoryId = category.id }, { Text("${category.icon} ${category.name}") })
@@ -501,15 +501,15 @@ fun QuickRecordPanel(state: MainUiState, vm: MainViewModel, onDismiss: () -> Uni
                             items(IncomeAllocation.entries) { item -> FilterChip(allocation == item, { allocation = item }, { Text(item.label()) }) }
                         }
                     }
-                    OutlinedTextField(note, { note = it }, label = { Text("备注（可选）") }, modifier = Modifier.fillMaxWidth(), colors = appTextFieldColors())
+                    AppTextInput(note, { note = it }, "备注（可选）", modifier = Modifier.fillMaxWidth())
                     OutlinedButton(onClick = { showDatePicker = true }, modifier = Modifier.fillMaxWidth()) {
                         Text("日期：${selectedDate.format(DateTimeFormatter.ofPattern("yyyy年M月d日"))}")
                     }
                 }
             }
             TextButton(onClick = { showMore = !showMore }) { Text(if (showMore) "收起更多" else "更多") }
-            PressableButton(onClick = {
-                if (saving) return@PressableButton
+            PrimaryActionButton(onClick = {
+                if (saving) return@PrimaryActionButton
                 if (cents == null || categoryId == null) vm.showMessage("请输入有效金额并选择分类")
                 else {
                     saving = true
