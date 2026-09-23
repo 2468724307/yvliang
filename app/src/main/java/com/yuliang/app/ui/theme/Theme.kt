@@ -13,6 +13,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
 import androidx.compose.animation.core.Spring
@@ -26,6 +27,38 @@ object Spacing {
     val content = 20.dp
     val large = 24.dp
     val section = 32.dp
+    val spacious = 40.dp
+    val extraLarge = 48.dp
+    val maximum = 64.dp
+}
+
+object YuliangElevation {
+    val flat = 0.dp
+    val subtle = 1.dp
+    val floating = 4.dp
+    val dialog = 8.dp
+}
+
+object YuliangSizes {
+    val touchTarget = 48.dp
+    val primaryAction = 56.dp
+    val listItem = 68.dp
+    val iconSmall = 18.dp
+    val iconNormal = 24.dp
+    val iconFeature = 32.dp
+}
+
+object YuliangTypography {
+    val displayAmount = TextStyle(fontSize = 34.sp, lineHeight = 40.sp, fontWeight = FontWeight.SemiBold, fontFeatureSettings = "tnum")
+    val amountLarge = TextStyle(fontSize = 26.sp, lineHeight = 32.sp, fontWeight = FontWeight.SemiBold, fontFeatureSettings = "tnum")
+    val amountMedium = TextStyle(fontSize = 21.sp, lineHeight = 28.sp, fontWeight = FontWeight.SemiBold, fontFeatureSettings = "tnum")
+    val titleLarge = TextStyle(fontSize = 24.sp, lineHeight = 30.sp, fontWeight = FontWeight.SemiBold)
+    val titleMedium = TextStyle(fontSize = 18.sp, lineHeight = 26.sp, fontWeight = FontWeight.Medium)
+    val titleSmall = TextStyle(fontSize = 16.sp, lineHeight = 24.sp, fontWeight = FontWeight.Medium)
+    val bodyLarge = TextStyle(fontSize = 16.sp, lineHeight = 24.sp)
+    val bodyMedium = TextStyle(fontSize = 14.sp, lineHeight = 21.sp)
+    val label = TextStyle(fontSize = 14.sp, lineHeight = 20.sp, fontWeight = FontWeight.Medium)
+    val caption = TextStyle(fontSize = 12.sp, lineHeight = 18.sp)
 }
 
 /** Semantic colors outside Material's standard roles. Use these in screens and charts. */
@@ -102,10 +135,12 @@ fun appTextFieldColors(): TextFieldColors = OutlinedTextFieldDefaults.colors(
 )
 
 object YuliangShapes {
-    val small = androidx.compose.foundation.shape.RoundedCornerShape(10.dp)
-    val medium = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
-    val card = androidx.compose.foundation.shape.RoundedCornerShape(22.dp)
-    val hero = androidx.compose.foundation.shape.RoundedCornerShape(30.dp)
+    val small = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
+    val medium = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+    val card = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
+    val extraLarge = androidx.compose.foundation.shape.RoundedCornerShape(20.dp)
+    val hero = androidx.compose.foundation.shape.RoundedCornerShape(24.dp)
+    val sheet = androidx.compose.foundation.shape.RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
     val pill = androidx.compose.foundation.shape.RoundedCornerShape(50)
 }
 
@@ -177,14 +212,15 @@ private val AppShapes = Shapes(
 )
 
 private val AppTypography = Typography(
-    displayLarge = androidx.compose.ui.text.TextStyle(fontSize = 48.sp, lineHeight = 54.sp, fontWeight = FontWeight.SemiBold),
-    headlineLarge = androidx.compose.ui.text.TextStyle(fontSize = 32.sp, lineHeight = 38.sp, fontWeight = FontWeight.SemiBold),
-    headlineMedium = androidx.compose.ui.text.TextStyle(fontSize = 26.sp, lineHeight = 32.sp, fontWeight = FontWeight.SemiBold),
-    titleLarge = androidx.compose.ui.text.TextStyle(fontSize = 22.sp, lineHeight = 28.sp, fontWeight = FontWeight.SemiBold),
-    titleMedium = androidx.compose.ui.text.TextStyle(fontSize = 17.sp, lineHeight = 24.sp, fontWeight = FontWeight.Medium),
-    bodyLarge = androidx.compose.ui.text.TextStyle(fontSize = 16.sp, lineHeight = 24.sp),
-    bodyMedium = androidx.compose.ui.text.TextStyle(fontSize = 14.sp, lineHeight = 21.sp),
-    labelLarge = androidx.compose.ui.text.TextStyle(fontSize = 14.sp, lineHeight = 20.sp, fontWeight = FontWeight.Medium),
+    displayLarge = YuliangTypography.displayAmount,
+    headlineLarge = YuliangTypography.titleLarge,
+    headlineMedium = YuliangTypography.amountLarge,
+    titleLarge = YuliangTypography.titleMedium,
+    titleMedium = YuliangTypography.titleSmall,
+    bodyLarge = YuliangTypography.bodyLarge,
+    bodyMedium = YuliangTypography.bodyMedium,
+    labelLarge = YuliangTypography.label,
+    labelSmall = YuliangTypography.caption,
 )
 
 @Composable
