@@ -9,6 +9,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.snap
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -31,6 +32,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
@@ -466,9 +468,10 @@ fun QuickRecordPanel(state: MainUiState, vm: MainViewModel, onDismiss: () -> Uni
         tonalElevation = YuliangElevation.floating,
         shadowElevation = YuliangElevation.dialog,
         shape = YuliangShapes.sheet,
-        modifier = Modifier.fillMaxWidth().padding(Spacing.compact).animateContentSize(tween(if (state.reduceMotion) 0 else MotionTokens.Slow)),
+        modifier = Modifier.fillMaxWidth().heightIn(max = LocalConfiguration.current.screenHeightDp.dp * .86f)
+            .padding(Spacing.compact).animateContentSize(tween(if (state.reduceMotion) 0 else MotionTokens.Slow)),
     ) {
-        Column(Modifier.padding(Spacing.content), verticalArrangement = Arrangement.spacedBy(Spacing.compact)) {
+        Column(Modifier.verticalScroll(rememberScrollState()).padding(Spacing.content), verticalArrangement = Arrangement.spacedBy(Spacing.compact)) {
             var sheetDrag by remember { mutableFloatStateOf(0f) }
             Box(Modifier.fillMaxWidth().height(Spacing.large).pointerInput(onDismiss) {
                 detectVerticalDragGestures(
