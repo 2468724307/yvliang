@@ -36,6 +36,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalDensity
 import com.yuliang.app.BuildConfig
 import com.yuliang.app.data.repository.Category
 import com.yuliang.app.domain.dashboard.*
@@ -605,6 +606,7 @@ private fun TransactionRow(tx: Transaction, categories: List<Category>, onClick:
 @Composable
 private fun StaggeredItem(index: Int, enabled: Boolean, content: @Composable () -> Unit) {
     val animate = enabled && index < 4
+    val offsetPx = with(LocalDensity.current) { MotionTokens.ItemOffset.roundToPx() }
     var visible by rememberSaveable { mutableStateOf(!animate) }
     LaunchedEffect(enabled) {
         if (!animate) visible = true
@@ -615,7 +617,7 @@ private fun StaggeredItem(index: Int, enabled: Boolean, content: @Composable () 
     }
     AnimatedVisibility(
         visible = visible,
-        enter = fadeIn(tween(MotionTokens.Medium)) + slideInVertically(tween(MotionTokens.Medium)) { 18 },
+        enter = fadeIn(tween(MotionTokens.Medium)) + slideInVertically(tween(MotionTokens.Medium)) { offsetPx },
     ) { content() }
 }
 

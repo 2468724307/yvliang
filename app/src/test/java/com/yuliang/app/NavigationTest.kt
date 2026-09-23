@@ -67,4 +67,14 @@ class NavigationTest {
         compose.onNodeWithTag("bills_list").performScrollToNode(hasText("−¥12.34"))
         compose.onNodeWithText("−¥12.34").assertIsDisplayed()
     }
+
+    @Test fun systemBackDismissesQuickRecord() {
+        compose.onNodeWithTag("open_record").performClick()
+        compose.onNodeWithTag("record_amount").assertIsDisplayed()
+        compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
+        compose.waitUntil(timeoutMillis = 5_000) {
+            compose.onAllNodesWithTag("open_record").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithTag("open_record").assertExists()
+    }
 }
