@@ -168,7 +168,7 @@ fun BillsScreen(state: MainUiState, onTransaction: (Long) -> Unit) {
     }
     val grouped = filtered.groupBy { it.date(ZoneId.systemDefault()) }.toSortedMap(reverseOrder())
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().testTag("bills_list"),
         contentPadding = PaddingValues(Spacing.content, Spacing.content, Spacing.content, 104.dp),
         verticalArrangement = Arrangement.spacedBy(Spacing.compact),
     ) {
