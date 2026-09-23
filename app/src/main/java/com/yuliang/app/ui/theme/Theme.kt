@@ -2,6 +2,8 @@ package com.yuliang.app.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
@@ -94,6 +96,17 @@ private val LocalYuliangPalette = staticCompositionLocalOf { LightPalette }
 object AppColors {
     val current: YuliangPalette @Composable get() = LocalYuliangPalette.current
 }
+
+@Composable
+fun appTextFieldColors(): TextFieldColors = OutlinedTextFieldDefaults.colors(
+    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+    errorContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+    disabledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+    focusedBorderColor = MaterialTheme.colorScheme.primary,
+    errorBorderColor = MaterialTheme.colorScheme.error,
+    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+)
 
 object YuliangShapes {
     val small = androidx.compose.foundation.shape.RoundedCornerShape(10.dp)

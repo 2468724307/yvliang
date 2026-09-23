@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yuliang.app.domain.model.FixedExpenseStatus
+import com.yuliang.app.ui.theme.appTextFieldColors
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -20,7 +21,7 @@ fun MonthlyPlanScreen(vm: PlanViewModel, onBack: () -> Unit) {
     var base by remember(state.plan) { mutableStateOf(state.plan?.baseIncomeCents?.toYuan() ?: "") }
     var saving by remember(state.plan) { mutableStateOf(state.plan?.savingGoalCents?.toYuan() ?: "") }
     var reserve by remember(state.plan) { mutableStateOf(state.plan?.safetyReserveCents?.toYuan() ?: "0") }
-    Scaffold(topBar = { SimpleTopBar("本月计划", onBack) }, snackbarHost = { SnackbarHost(snackbar) }) { padding ->
+    Scaffold(containerColor = MaterialTheme.colorScheme.background, topBar = { SimpleTopBar("本月计划", onBack) }, snackbarHost = { SnackbarHost(snackbar) }) { padding ->
         Column(Modifier.padding(padding).padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Text("存钱目标和安全余额会在月初立即预留。", style = MaterialTheme.typography.bodyMedium)
             MoneyField("本月生活费", base) { base = it }
@@ -44,12 +45,12 @@ fun FixedExpenseScreen(vm: PlanViewModel, onBack: () -> Unit) {
     var name by remember { mutableStateOf("") }
     var amount by remember { mutableStateOf("") }
     var dueDay by remember { mutableStateOf("1") }
-    Scaffold(topBar = { SimpleTopBar("固定支出", onBack) }, snackbarHost = { SnackbarHost(snackbar) }) { padding ->
+    Scaffold(containerColor = MaterialTheme.colorScheme.background, topBar = { SimpleTopBar("固定支出", onBack) }, snackbarHost = { SnackbarHost(snackbar) }) { padding ->
         LazyColumn(Modifier.padding(padding).padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             item { Text("固定支出会先冻结预算，支付时不会再次扣减。", modifier = Modifier.padding(top = 16.dp)) }
-            item { OutlinedTextField(name, { name = it }, label = { Text("名称") }, singleLine = true, modifier = Modifier.fillMaxWidth()) }
+            item { OutlinedTextField(name, { name = it }, label = { Text("名称") }, singleLine = true, modifier = Modifier.fillMaxWidth(), colors = appTextFieldColors()) }
             item { MoneyField("金额", amount) { amount = it } }
-            item { OutlinedTextField(dueDay, { dueDay = it.filter(Char::isDigit) }, label = { Text("每月支付日") }, singleLine = true, modifier = Modifier.fillMaxWidth()) }
+            item { OutlinedTextField(dueDay, { dueDay = it.filter(Char::isDigit) }, label = { Text("每月支付日") }, singleLine = true, modifier = Modifier.fillMaxWidth(), colors = appTextFieldColors()) }
             item { Button(onClick = {
                 val cents = yuanToCentsOrNull(amount)
                 val day = dueDay.toIntOrNull()
@@ -75,7 +76,7 @@ fun FixedExpenseScreen(vm: PlanViewModel, onBack: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable private fun SimpleTopBar(title: String, onBack: () -> Unit) = TopAppBar(title = { Text(title) }, navigationIcon = { TextButton(onClick = onBack) { Text("返回") } })
-@Composable private fun MoneyField(label: String, value: String, onChange: (String) -> Unit) = OutlinedTextField(value, { onChange(it.filter { c -> c.isDigit() || c == '.' }) }, label = { Text("$label（元）") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+@Composable private fun MoneyField(label: String, value: String, onChange: (String) -> Unit) = OutlinedTextField(value, { onChange(it.filter { c -> c.isDigit() || c == '.' }) }, label = { Text("$label（元）") }, singleLine = true, modifier = Modifier.fillMaxWidth(), colors = appTextFieldColors())
 private fun yuanToCentsOrNull(text: String): Long? = try { BigDecimal(text).setScale(2, RoundingMode.UNNECESSARY).movePointRight(2).longValueExact().takeIf { it >= 0 } } catch (_: Exception) { null }
 private fun Long.toYuan() = BigDecimal.valueOf(this, 2).stripTrailingZeros().toPlainString()
 private fun Long.formatMoney() = "¥" + BigDecimal.valueOf(this, 2).setScale(2).toPlainString()

@@ -29,6 +29,7 @@ import com.yuliang.app.ui.plan.FixedExpenseScreen
 import com.yuliang.app.ui.plan.MonthlyPlanScreen
 import com.yuliang.app.ui.plan.PlanViewModel
 import com.yuliang.app.ui.theme.MotionTokens
+import com.yuliang.app.ui.theme.AppColors
 
 private data class MainDestination(val route: String, val label: String, val mark: String)
 private val mainDestinations = listOf(
@@ -58,9 +59,10 @@ fun YuliangApp() {
 
     Box(Modifier.fillMaxSize()) {
         Scaffold(
+            containerColor = MaterialTheme.colorScheme.background,
             snackbarHost = { SnackbarHost(snackbar) },
             bottomBar = {
-                if (isMain) NavigationBar {
+                if (isMain) NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
                     mainDestinations.forEach { destination ->
                         NavigationBarItem(
                             selected = currentRoute == destination.route,
@@ -73,6 +75,13 @@ fun YuliangApp() {
                             },
                             icon = { Text(destination.mark) },
                             label = { Text(destination.label) },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = MaterialTheme.colorScheme.primary,
+                                selectedTextColor = MaterialTheme.colorScheme.primary,
+                                indicatorColor = AppColors.current.brandSoft,
+                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            ),
                         )
                     }
                 }
@@ -83,6 +92,8 @@ fun YuliangApp() {
                     modifier = Modifier.testTag("open_record"),
                     text = { Text("＋ 记一笔") },
                     icon = {},
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
                 )
             },
         ) { padding ->

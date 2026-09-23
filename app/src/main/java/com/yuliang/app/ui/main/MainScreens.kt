@@ -150,7 +150,7 @@ fun BillsScreen(state: MainUiState, onTransaction: (Long) -> Unit) {
         verticalArrangement = Arrangement.spacedBy(Spacing.compact),
     ) {
         item { Text("全部账单", style = MaterialTheme.typography.headlineLarge) }
-        item { OutlinedTextField(query, { query = it }, label = { Text("搜索备注或分类") }, singleLine = true, modifier = Modifier.fillMaxWidth()) }
+        item { OutlinedTextField(query, { query = it }, label = { Text("搜索备注或分类") }, singleLine = true, modifier = Modifier.fillMaxWidth(), colors = appTextFieldColors()) }
         item {
             LazyRow(horizontalArrangement = Arrangement.spacedBy(Spacing.small)) {
                 item { FilterChip(type == null, { type = null }, { Text("全部") }) }
@@ -301,8 +301,8 @@ fun CategoryManagementScreen(state: MainUiState, vm: MainViewModel, onBack: () -
     var type by rememberSaveable { mutableStateOf(TransactionType.EXPENSE) }
     SimplePage("分类管理", onBack) {
         Text("归档分类不会删除历史账单中的分类引用。", color = MaterialTheme.colorScheme.onSurfaceVariant)
-        OutlinedTextField(name, { name = it.take(12) }, label = { Text("分类名称") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-        OutlinedTextField(icon, { icon = it.take(2) }, label = { Text("图标或符号") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(name, { name = it.take(12) }, label = { Text("分类名称") }, singleLine = true, modifier = Modifier.fillMaxWidth(), colors = appTextFieldColors())
+        OutlinedTextField(icon, { icon = it.take(2) }, label = { Text("图标或符号") }, singleLine = true, modifier = Modifier.fillMaxWidth(), colors = appTextFieldColors())
         Row(horizontalArrangement = Arrangement.spacedBy(Spacing.small)) {
             FilterChip(type == TransactionType.EXPENSE, { type = TransactionType.EXPENSE }, { Text("支出") })
             FilterChip(type == TransactionType.INCOME, { type = TransactionType.INCOME }, { Text("收入") })
@@ -347,8 +347,8 @@ fun TransactionDetailScreen(state: MainUiState, id: Long, onBack: () -> Unit, vm
     SimplePage("账单详情", onBack) {
         Text(transaction.type.label(), style = MaterialTheme.typography.titleMedium)
         if (editing) {
-            OutlinedTextField(amount, { amount = it.filter { c -> c.isDigit() || c == '.' } }, label = { Text("金额（元）") }, modifier = Modifier.fillMaxWidth())
-            OutlinedTextField(note, { note = it }, label = { Text("备注") }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(amount, { amount = it.filter { c -> c.isDigit() || c == '.' } }, label = { Text("金额（元）") }, modifier = Modifier.fillMaxWidth(), colors = appTextFieldColors())
+            OutlinedTextField(note, { note = it }, label = { Text("备注") }, modifier = Modifier.fillMaxWidth(), colors = appTextFieldColors())
             LazyRow(horizontalArrangement = Arrangement.spacedBy(Spacing.small)) {
                 items(state.categories.filter { (it.isEnabled || it.id == transaction.categoryId) && it.type == transaction.type }, key = { it.id }) { category ->
                     FilterChip(editCategoryId == category.id, { editCategoryId = category.id }, { Text(category.name) })
@@ -379,6 +379,7 @@ fun TransactionDetailScreen(state: MainUiState, id: Long, onBack: () -> Unit, vm
         }
     }
     if (confirmDelete) AlertDialog(
+        containerColor = MaterialTheme.colorScheme.surface,
         onDismissRequest = { confirmDelete = false },
         title = { Text("删除这笔账单？") },
         text = { Text("删除后预算与统计会立即重新计算，此操作无法撤销。") },
@@ -418,6 +419,7 @@ fun QuickRecordPanel(state: MainUiState, vm: MainViewModel, onDismiss: () -> Uni
     val ready = state.dashboard as? DashboardResult.Ready
     val impact = if (type == TransactionType.EXPENSE && cents != null && ready != null) TransactionImpactCalculator.afterExpense(ready.budget.todayRemainingCents, cents) else null
     Surface(
+        color = MaterialTheme.colorScheme.surface,
         tonalElevation = 8.dp,
         shadowElevation = 12.dp,
         shape = YuliangShapes.hero,
@@ -428,7 +430,7 @@ fun QuickRecordPanel(state: MainUiState, vm: MainViewModel, onDismiss: () -> Uni
                 Text("记一笔", style = MaterialTheme.typography.titleLarge)
                 TextButton(onClick = onDismiss) { Text("关闭") }
             }
-            OutlinedTextField(amount, { amount = it.filter { c -> c.isDigit() || c == '.' } }, label = { Text("金额（元）") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("record_amount"))
+            OutlinedTextField(amount, { amount = it.filter { c -> c.isDigit() || c == '.' } }, label = { Text("金额（元）") }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("record_amount"), colors = appTextFieldColors())
             LazyRow(horizontalArrangement = Arrangement.spacedBy(Spacing.small)) {
                 items(state.categories.filter { it.isEnabled && it.type == type }, key = { it.id }) { category ->
                     FilterChip(categoryId == category.id, { categoryId = category.id }, { Text("${category.icon} ${category.name}") })
@@ -447,7 +449,7 @@ fun QuickRecordPanel(state: MainUiState, vm: MainViewModel, onDismiss: () -> Uni
                             items(IncomeAllocation.entries) { item -> FilterChip(allocation == item, { allocation = item }, { Text(item.label()) }) }
                         }
                     }
-                    OutlinedTextField(note, { note = it }, label = { Text("备注（可选）") }, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(note, { note = it }, label = { Text("备注（可选）") }, modifier = Modifier.fillMaxWidth(), colors = appTextFieldColors())
                     OutlinedButton(onClick = { showDatePicker = true }, modifier = Modifier.fillMaxWidth()) {
                         Text("日期：${selectedDate.format(DateTimeFormatter.ofPattern("yyyy年M月d日"))}")
                     }
@@ -504,6 +506,7 @@ fun DataManagementScreen(state: MainUiState, vm: MainViewModel, onBack: () -> Un
         Button(onClick = { open.launch(arrayOf("application/json", "text/plain")) }, enabled = !state.busy, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) { Text("从备份恢复") }
     }
     restoreUri?.let { uri -> AlertDialog(
+        containerColor = MaterialTheme.colorScheme.surface,
         onDismissRequest = { restoreUri = null },
         title = { Text("确认覆盖当前数据？") },
         text = { Text("恢复将用备份中的计划、分类、固定支出和账单替换当前数据。文件无效或导入失败时不会更改现有数据。") },
@@ -523,7 +526,7 @@ fun AboutScreen(onBack: () -> Unit) = SimplePage("关于余量", onBack) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SimplePage(title: String, onBack: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
-    Scaffold(topBar = { TopAppBar(title = { Text(title) }, navigationIcon = { TextButton(onClick = onBack) { Text("返回") } }) }) { padding ->
+    Scaffold(containerColor = MaterialTheme.colorScheme.background, topBar = { TopAppBar(title = { Text(title) }, navigationIcon = { TextButton(onClick = onBack) { Text("返回") } }) }) { padding ->
         Column(Modifier.padding(padding).verticalScroll(androidx.compose.foundation.rememberScrollState()).padding(Spacing.content), verticalArrangement = Arrangement.spacedBy(Spacing.medium), content = content)
     }
 }
