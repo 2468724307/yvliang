@@ -28,6 +28,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.dp
 import com.yuliang.app.ui.theme.AppColors
@@ -60,17 +62,19 @@ fun PressableButton(
 ) {
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
+    val haptic = LocalHapticFeedback.current
+    val palette = AppColors.current
     val scale by animateFloatAsState(
-        targetValue = if (pressed && !reduceMotion) 0.96f else 1f,
-        animationSpec = if (reduceMotion) snap() else spring(dampingRatio = 0.72f, stiffness = Spring.StiffnessMedium),
+        targetValue = if (pressed && !reduceMotion) MotionTokens.PressedScale else 1f,
+        animationSpec = if (reduceMotion) snap() else tween(MotionTokens.Fast),
         label = "buttonPress",
     )
     Button(
-        onClick = onClick,
+        onClick = { if (!reduceMotion) haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove); onClick() },
         enabled = enabled,
         interactionSource = interaction,
         shape = RoundedCornerShape(50),
-        colors = ButtonDefaults.buttonColors(),
+        colors = ButtonDefaults.buttonColors(containerColor = if (pressed) palette.brandPressed else MaterialTheme.colorScheme.primary),
         modifier = modifier.graphicsLayer { scaleX = scale; scaleY = scale },
         content = content,
     )

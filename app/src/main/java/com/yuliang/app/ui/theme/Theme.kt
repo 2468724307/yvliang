@@ -15,6 +15,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 
 object Spacing {
     val tiny = 4.dp
@@ -108,10 +110,20 @@ object YuliangShapes {
 }
 
 object MotionTokens {
-    const val Fast = 90
-    const val Medium = 220
-    const val Slow = 340
+    const val Fast = 80
+    const val Quick = 140
+    const val Normal = 220
+    const val Container = 320
+    const val Slow = 420
+    const val Medium = Normal
     const val StaggerDelay = 28
+    const val PressedScale = .975f
+    const val CardPressedScale = .992f
+    val MicroOffset = 4.dp
+    val ItemOffset = 8.dp
+    val PageOffset = 12.dp
+    val PressSpring = spring<Float>(dampingRatio = .85f, stiffness = Spring.StiffnessMedium)
+    val SoftSpring = spring<Float>(dampingRatio = .9f, stiffness = Spring.StiffnessMediumLow)
 }
 
 private val Light = lightColorScheme(
