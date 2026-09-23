@@ -44,6 +44,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import java.time.*
 import java.time.format.DateTimeFormatter
+import kotlin.math.roundToInt
 
 @Composable
 fun HomeScreen(state: MainUiState, onPlan: () -> Unit, onRecord: () -> Unit, onTransaction: (Long) -> Unit) {
@@ -269,7 +270,7 @@ fun StatisticsScreen(state: MainUiState) {
     var selectedIndex by remember { mutableStateOf<Int?>(null) }
     var chartWidth by remember { mutableFloatStateOf(1f) }
     fun selectAt(x: Float) {
-        if (points.isNotEmpty()) selectedIndex = ((x / chartWidth) * (points.size - 1)).toInt().coerceIn(0, points.lastIndex)
+        if (points.isNotEmpty()) selectedIndex = ((x / chartWidth) * (points.size - 1)).roundToInt().coerceIn(0, points.lastIndex)
     }
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.small)) {
         selectedIndex?.let { index -> Text("${points[index].date.format(DateTimeFormatter.ofPattern("M月d日"))} · ${points[index].amountCents.money()}") }
@@ -299,8 +300,8 @@ fun StatisticsScreen(state: MainUiState) {
             selectedIndex?.let { index ->
                 val x = size.width * index / (points.size - 1)
                 val y = size.height - size.height * (points[index].amountCents.toFloat() / max.toFloat())
-                drawCircle(lineColor.copy(alpha = .18f), radius = 20f, center = androidx.compose.ui.geometry.Offset(x, y))
-                drawCircle(lineColor, radius = 8f, center = androidx.compose.ui.geometry.Offset(x, y))
+                drawCircle(lineColor.copy(alpha = .14f), radius = 13.dp.toPx(), center = androidx.compose.ui.geometry.Offset(x, y))
+                drawCircle(lineColor, radius = 8.dp.toPx(), center = androidx.compose.ui.geometry.Offset(x, y))
             }
         }
     }
