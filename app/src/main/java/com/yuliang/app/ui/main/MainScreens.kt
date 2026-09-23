@@ -133,7 +133,7 @@ fun HomeScreen(state: MainUiState, onPlan: () -> Unit, onBills: () -> Unit, onTr
                 item {
                     SectionHeader("最近账单", action = "查看全部", onAction = onBills)
                 }
-                if (dashboard.recentTransactions.isEmpty()) item { EmptyCard("还没有账单，记下第一笔消费吧。") }
+                if (dashboard.recentTransactions.isEmpty()) item { EmptyState("暂无账单", "还没有账单，记下第一笔消费吧。", Modifier.fillMaxWidth()) }
                 else itemsIndexed(dashboard.recentTransactions, key = { _, item -> item.id }) { index, tx ->
                     StaggeredItem(index, !state.reduceMotion) { TransactionRow(tx, state.categories, onClick = { onTransaction(tx.id) }) }
                 }
@@ -148,8 +148,6 @@ fun HomeScreen(state: MainUiState, onPlan: () -> Unit, onBills: () -> Unit, onTr
         Text(value, style = if (value.startsWith("¥")) YuliangTypography.amountMedium else YuliangTypography.bodyMedium, maxLines = 3)
     }
 }
-
-@Composable private fun EmptyCard(text: String) = Card(Modifier.fillMaxWidth()) { Text(text, Modifier.padding(Spacing.large)) }
 
 @Composable
 fun BillsScreen(state: MainUiState, onTransaction: (Long) -> Unit) {
@@ -199,7 +197,7 @@ fun BillsScreen(state: MainUiState, onTransaction: (Long) -> Unit) {
                 items(state.categories, key = { it.id }) { category -> FilterChip(categoryId == category.id, { categoryId = category.id }, { Text(category.name) }) }
             }
         }
-        if (filtered.isEmpty()) item { EmptyCard("没有符合条件的账单。") }
+        if (filtered.isEmpty()) item { EmptyState("没有符合条件的账单", "没有符合条件的账单。", Modifier.fillMaxWidth()) }
         grouped.forEach { (date, rows) ->
             item(key = "header-$date") { Text(date.format(DateTimeFormatter.ofPattern("M月d日 EEEE")), style = YuliangTypography.label, color = MaterialTheme.colorScheme.onSurfaceVariant) }
             itemsIndexed(rows, key = { _, item -> item.id }) { index, tx ->
@@ -221,7 +219,7 @@ fun StatisticsScreen(state: MainUiState) {
     ) {
         item { Text("统计", style = MaterialTheme.typography.headlineLarge) }
         when (val stats = state.statistics) {
-            StatisticsResult.Empty -> item { EmptyCard("本月还没有可统计的消费。记录几笔后，这里会显示分类与趋势。") }
+            StatisticsResult.Empty -> item { EmptyState("暂无统计数据", "本月还没有可统计的消费。记录几笔后，这里会显示分类与趋势。", Modifier.fillMaxWidth()) }
             is StatisticsResult.Content -> {
                 item {
                     DataCard(Modifier.fillMaxWidth()) {
@@ -384,7 +382,7 @@ fun CategoryManagementScreen(state: MainUiState, vm: MainViewModel, onBack: () -
 @Composable
 fun TransactionDetailScreen(state: MainUiState, id: Long, onBack: () -> Unit, vm: MainViewModel) {
     val transaction = state.transactions.firstOrNull { it.id == id }
-    if (transaction == null) { SimplePage("账单不存在", onBack) { Text("这笔账单可能已经被删除。") }; return }
+    if (transaction == null) { SimplePage("账单不存在", onBack) { EmptyState("账单不存在", "这笔账单可能已经被删除。", Modifier.fillMaxWidth()) }; return }
     var editing by rememberSaveable { mutableStateOf(false) }
     var amount by rememberSaveable(transaction.id) { mutableStateOf(transaction.amountCents.yuanInput()) }
     var note by rememberSaveable(transaction.id) { mutableStateOf(transaction.note.orEmpty()) }
@@ -427,14 +425,8 @@ fun TransactionDetailScreen(state: MainUiState, id: Long, onBack: () -> Unit, vm
             } else Text("此账单由固定支出生成，请在固定支出中管理。")
         }
     }
-    if (confirmDelete) AlertDialog(
-        containerColor = MaterialTheme.colorScheme.surface,
-        onDismissRequest = { confirmDelete = false },
-        title = { Text("删除这笔账单？") },
-        text = { Text("删除后预算与统计会立即重新计算，此操作无法撤销。") },
-        confirmButton = { TextButton(onClick = { vm.deleteTransaction(id); confirmDelete = false; onBack() }) { Text("删除") } },
-        dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("取消") } },
-    )
+    if (confirmDelete) YuliangConfirmDialog("删除这笔账单？", "删除后预算与统计会立即重新计算，此操作无法撤销。", "删除",
+        onConfirm = { vm.deleteTransaction(id); confirmDelete = false; onBack() }, onDismiss = { confirmDelete = false }, destructive = true)
     if (showEditDatePicker) DatePickerDialog(
         onDismissRequest = { showEditDatePicker = false },
         confirmButton = { TextButton(onClick = {
@@ -470,12 +462,14 @@ fun QuickRecordPanel(state: MainUiState, vm: MainViewModel, onDismiss: () -> Uni
     val impact = if (type == TransactionType.EXPENSE && cents != null && ready != null) TransactionImpactCalculator.afterExpense(ready.budget.todayRemainingCents, cents) else null
     Surface(
         color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 8.dp,
-        shadowElevation = 12.dp,
-        shape = YuliangShapes.hero,
+        tonalElevation = YuliangElevation.floating,
+        shadowElevation = YuliangElevation.dialog,
+        shape = YuliangShapes.sheet,
         modifier = Modifier.fillMaxWidth().padding(Spacing.compact).animateContentSize(tween(if (state.reduceMotion) 0 else MotionTokens.Slow)),
     ) {
         Column(Modifier.padding(Spacing.content), verticalArrangement = Arrangement.spacedBy(Spacing.compact)) {
+            Box(Modifier.align(Alignment.CenterHorizontally).width(Spacing.spacious).height(Spacing.tiny)
+                .clip(YuliangShapes.pill).background(MaterialTheme.colorScheme.outlineVariant))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Text("记一笔", style = MaterialTheme.typography.titleLarge)
                 QuietActionButton(onClick = onDismiss) { Text("关闭") }
@@ -552,21 +546,16 @@ fun DataManagementScreen(state: MainUiState, vm: MainViewModel, onBack: () -> Un
     LaunchedEffect(state.export) { state.export?.let { create.launch(it.name) } }
     SimplePage("数据管理", onBack) {
         Text("完整备份包含计划、分类、固定支出和账单。恢复会覆盖当前数据。", color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Button(onClick = { pendingShare = false; vm.prepareBackup() }, enabled = !state.busy, modifier = Modifier.fillMaxWidth()) { Text("保存完整备份（JSON）") }
-        OutlinedButton(onClick = { pendingShare = false; vm.prepareCsv() }, enabled = !state.busy, modifier = Modifier.fillMaxWidth()) { Text("导出账单（CSV）") }
-        OutlinedButton(onClick = { pendingShare = true; vm.prepareBackup() }, enabled = !state.busy, modifier = Modifier.fillMaxWidth()) { Text("分享完整备份") }
+        PrimaryActionButton(onClick = { pendingShare = false; vm.prepareBackup() }, enabled = !state.busy, modifier = Modifier.fillMaxWidth()) { Text("保存完整备份（JSON）") }
+        SecondaryActionButton(onClick = { pendingShare = false; vm.prepareCsv() }, enabled = !state.busy, modifier = Modifier.fillMaxWidth()) { Text("导出账单（CSV）") }
+        SecondaryActionButton(onClick = { pendingShare = true; vm.prepareBackup() }, enabled = !state.busy, modifier = Modifier.fillMaxWidth()) { Text("分享完整备份") }
         HorizontalDivider()
         Text("恢复前会完整校验文件版本与引用关系；校验或写入失败时，现有数据保持不变。")
-        Button(onClick = { open.launch(arrayOf("application/json", "text/plain")) }, enabled = !state.busy, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) { Text("从备份恢复") }
+        DestructiveActionButton(onClick = { open.launch(arrayOf("application/json", "text/plain")) }, enabled = !state.busy, modifier = Modifier.fillMaxWidth()) { Text("从备份恢复") }
     }
-    restoreUri?.let { uri -> AlertDialog(
-        containerColor = MaterialTheme.colorScheme.surface,
-        onDismissRequest = { restoreUri = null },
-        title = { Text("确认覆盖当前数据？") },
-        text = { Text("恢复将用备份中的计划、分类、固定支出和账单替换当前数据。文件无效或导入失败时不会更改现有数据。") },
-        confirmButton = { TextButton(onClick = { vm.restore(context.contentResolver, uri); restoreUri = null }) { Text("确认恢复") } },
-        dismissButton = { TextButton(onClick = { restoreUri = null }) { Text("取消") } },
-    ) }
+    restoreUri?.let { uri -> YuliangConfirmDialog("确认覆盖当前数据？",
+        "恢复将用备份中的计划、分类、固定支出和账单替换当前数据。文件无效或导入失败时不会更改现有数据。", "确认恢复",
+        onConfirm = { vm.restore(context.contentResolver, uri); restoreUri = null }, onDismiss = { restoreUri = null }, destructive = true) }
 }
 
 @Composable

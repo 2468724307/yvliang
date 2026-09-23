@@ -27,6 +27,7 @@ import com.yuliang.app.YuliangApplication
 import com.yuliang.app.ui.main.*
 import com.yuliang.app.ui.components.YuliangBottomSheet
 import com.yuliang.app.ui.components.YuliangIcon
+import com.yuliang.app.ui.components.YuliangSnackbarHost
 import com.yuliang.app.ui.plan.FixedExpenseScreen
 import com.yuliang.app.ui.plan.MonthlyPlanScreen
 import com.yuliang.app.ui.plan.PlanViewModel
@@ -62,7 +63,7 @@ fun YuliangApp() {
     Box(Modifier.fillMaxSize()) {
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
-            snackbarHost = { SnackbarHost(snackbar) },
+            snackbarHost = { YuliangSnackbarHost(snackbar) },
             bottomBar = {
                 if (isMain) NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
                     mainDestinations.forEach { destination ->

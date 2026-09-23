@@ -20,6 +20,7 @@ import com.yuliang.app.ui.components.PrimaryActionButton
 import com.yuliang.app.ui.components.SecondaryActionButton
 import com.yuliang.app.ui.components.money
 import com.yuliang.app.ui.components.yuanInput
+import com.yuliang.app.ui.components.YuliangSnackbarHost
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -31,7 +32,7 @@ fun MonthlyPlanScreen(vm: PlanViewModel, onBack: () -> Unit) {
     var base by remember(state.plan) { mutableStateOf(state.plan?.baseIncomeCents?.toYuan() ?: "") }
     var saving by remember(state.plan) { mutableStateOf(state.plan?.savingGoalCents?.toYuan() ?: "") }
     var reserve by remember(state.plan) { mutableStateOf(state.plan?.safetyReserveCents?.toYuan() ?: "0") }
-    Scaffold(containerColor = MaterialTheme.colorScheme.background, topBar = { SimpleTopBar("本月计划", onBack) }, snackbarHost = { SnackbarHost(snackbar) }) { padding ->
+    Scaffold(containerColor = MaterialTheme.colorScheme.background, topBar = { SimpleTopBar("本月计划", onBack) }, snackbarHost = { YuliangSnackbarHost(snackbar) }) { padding ->
         Column(Modifier.padding(padding).padding(Spacing.content), verticalArrangement = Arrangement.spacedBy(Spacing.medium)) {
             Text("存钱目标和安全余额会在月初立即预留。", style = MaterialTheme.typography.bodyMedium)
             MoneyField("本月生活费", base) { base = it }
@@ -58,7 +59,7 @@ fun FixedExpenseScreen(vm: PlanViewModel, onBack: () -> Unit) {
     var name by remember { mutableStateOf("") }
     var amount by remember { mutableStateOf("") }
     var dueDay by remember { mutableStateOf("1") }
-    Scaffold(containerColor = MaterialTheme.colorScheme.background, topBar = { SimpleTopBar("固定支出", onBack) }, snackbarHost = { SnackbarHost(snackbar) }) { padding ->
+    Scaffold(containerColor = MaterialTheme.colorScheme.background, topBar = { SimpleTopBar("固定支出", onBack) }, snackbarHost = { YuliangSnackbarHost(snackbar) }) { padding ->
         LazyColumn(Modifier.padding(padding).padding(horizontal = Spacing.content), verticalArrangement = Arrangement.spacedBy(Spacing.compact)) {
             item { Text("固定支出会先冻结预算，支付时不会再次扣减。", modifier = Modifier.padding(top = Spacing.medium)) }
             item { AppTextInput(name, { name = it }, "名称", modifier = Modifier.fillMaxWidth()) }

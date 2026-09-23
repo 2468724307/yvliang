@@ -19,6 +19,10 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -102,3 +106,36 @@ fun AmountInput(value: String, onValueChange: (String) -> Unit, label: String, m
         textStyle = if (prominent) YuliangTypography.amountLarge else YuliangTypography.bodyLarge,
         singleLine = true, enabled = enabled, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
         shape = YuliangShapes.medium, colors = appTextFieldColors())
+
+@Composable
+fun EmptyState(title: String, description: String, modifier: Modifier = Modifier, action: String? = null, onAction: (() -> Unit)? = null) {
+    DataCard(modifier) {
+        YuliangIcon(YuliangIcon.BILLS)
+        Text(title, style = YuliangTypography.titleMedium)
+        Text(description, style = YuliangTypography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (action != null && onAction != null) SecondaryActionButton(onAction) { Text(action) }
+    }
+}
+
+@Composable
+fun YuliangSnackbarHost(hostState: SnackbarHostState) {
+    SnackbarHost(hostState) { data ->
+        Snackbar(data, shape = YuliangShapes.medium,
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            contentColor = MaterialTheme.colorScheme.onSurface)
+    }
+}
+
+@Composable
+fun YuliangConfirmDialog(title: String, message: String, confirmLabel: String, onConfirm: () -> Unit, onDismiss: () -> Unit, destructive: Boolean = false) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title, style = YuliangTypography.titleMedium) },
+        text = { Text(message, style = YuliangTypography.bodyMedium) },
+        confirmButton = { if (destructive) DestructiveActionButton(onConfirm) { Text(confirmLabel) }
+            else QuietActionButton(onConfirm) { Text(confirmLabel) } },
+        dismissButton = { QuietActionButton(onDismiss) { Text("取消") } },
+        shape = YuliangShapes.hero,
+        containerColor = MaterialTheme.colorScheme.surface,
+    )
+}
