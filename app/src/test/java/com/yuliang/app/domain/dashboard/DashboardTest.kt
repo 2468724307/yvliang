@@ -44,9 +44,9 @@ class DashboardTest {
             Transaction(3, TransactionType.EXPENSE, 3_000, now.atStartOfDay(zone).toInstant(), categoryId = 5),
         )
         val stats = StatisticsCalculator().calculate(tx, mapOf(4L to "学习", 5L to "餐饮"), null, now, zone, StatisticsPeriod.LAST_SEVEN_DAYS) as StatisticsResult.Content
-        assertEquals(5_000L, stats.totalExpenseCents)
-        assertEquals(5_000L, stats.categorySlices.sumOf { it.amountCents })
-        assertEquals(5_000L, stats.dailyTrend.sumOf { it.amountCents })
+        assertEquals(6_000L, stats.totalExpenseCents)
+        assertEquals(6_000L, stats.categorySlices.sumOf { it.amountCents })
+        assertEquals(6_000L, stats.dailyTrend.sumOf { it.amountCents })
         assertEquals(LocalDate.of(2026, 9, 26), stats.dailyTrend.first().date)
         assertEquals(7, stats.dailyTrend.size)
         assertNull(stats.prediction)

@@ -30,7 +30,7 @@ class NavigationTest {
         compose.onNodeWithText("账单").performClick()
         compose.onNodeWithText("全部账单").assertIsDisplayed()
         compose.onNodeWithText("统计").performClick()
-        compose.onNodeWithText("本月还没有可统计的消费。记录几笔后，这里会显示分类与趋势。").assertIsDisplayed()
+        compose.onNodeWithText("所选时间内还没有可统计的消费。记录几笔后，这里会显示分类与趋势。").assertIsDisplayed()
     }
 
     @Test fun systemBackPopsSecondaryPage() {
