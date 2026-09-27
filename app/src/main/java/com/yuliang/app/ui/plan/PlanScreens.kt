@@ -1,6 +1,8 @@
 package com.yuliang.app.ui.plan
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
@@ -33,7 +35,7 @@ fun MonthlyPlanScreen(vm: PlanViewModel, onBack: () -> Unit) {
     var saving by remember(state.plan) { mutableStateOf(state.plan?.savingGoalCents?.toYuan() ?: "") }
     var reserve by remember(state.plan) { mutableStateOf(state.plan?.safetyReserveCents?.toYuan() ?: "0") }
     Scaffold(containerColor = MaterialTheme.colorScheme.background, topBar = { SimpleTopBar("本月计划", onBack) }, snackbarHost = { YuliangSnackbarHost(snackbar) }) { padding ->
-        Column(Modifier.padding(padding).padding(Spacing.content), verticalArrangement = Arrangement.spacedBy(Spacing.medium)) {
+        Column(Modifier.padding(padding).verticalScroll(rememberScrollState()).padding(Spacing.content), verticalArrangement = Arrangement.spacedBy(Spacing.medium)) {
             Text("存钱目标和安全余额会在月初立即预留。", style = MaterialTheme.typography.bodyMedium)
             MoneyField("本月生活费", base) { base = it }
             MoneyField("存钱目标", saving) { saving = it }
@@ -75,9 +77,9 @@ fun FixedExpenseScreen(vm: PlanViewModel, onBack: () -> Unit) {
                 DataCard(Modifier.fillMaxWidth()) {
                         Text(item.name, style = MaterialTheme.typography.titleMedium)
                         Text("${item.amountCents.money()} · 每月 ${item.dueDay} 日 · ${item.status.label()}", style = YuliangTypography.bodyMedium)
-                        if (item.status == FixedExpenseStatus.UPCOMING) Row(horizontalArrangement = Arrangement.spacedBy(Spacing.small)) {
-                            SecondaryActionButton(onClick = { vm.payFixed(item.instanceId) }) { Text("标记已支付") }
-                            TextButton(onClick = { vm.skipFixed(item.instanceId) }) { Text("本月跳过") }
+                        if (item.status == FixedExpenseStatus.UPCOMING) Column(verticalArrangement = Arrangement.spacedBy(Spacing.small)) {
+                            SecondaryActionButton(onClick = { vm.payFixed(item.instanceId) }, modifier = Modifier.fillMaxWidth()) { Text("标记已支付") }
+                            TextButton(onClick = { vm.skipFixed(item.instanceId) }, modifier = Modifier.fillMaxWidth()) { Text("本月跳过") }
                         }
                 }
             }

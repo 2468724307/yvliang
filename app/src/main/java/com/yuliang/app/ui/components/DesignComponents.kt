@@ -3,6 +3,7 @@ package com.yuliang.app.ui.components
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -26,6 +27,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -80,10 +82,16 @@ fun AmountText(cents: Long, modifier: Modifier = Modifier, large: Boolean = fals
         else if (large && length > 9) base.copy(fontSize = 26.sp, lineHeight = 32.sp)
         else base
     val text = cents.money()
-    Text(buildAnnotatedString {
-        withStyle(SpanStyle(fontSize = style.fontSize * .65f)) { append("¥") }
-        append(text.removePrefix("¥"))
-    }, modifier = modifier, style = style, color = color, maxLines = 1, softWrap = false)
+    BoxWithConstraints(modifier) {
+        val scale = LocalDensity.current.fontScale
+        val estimatedWidth = text.length * style.fontSize.value * scale * .62f
+        val factor = if (maxWidth.value.isFinite() && estimatedWidth > maxWidth.value) maxWidth.value / estimatedWidth else 1f
+        val fitted = if (factor < 1f) style.copy(fontSize = (style.fontSize.value * factor).coerceAtLeast(12f).sp) else style
+        Text(buildAnnotatedString {
+            withStyle(SpanStyle(fontSize = fitted.fontSize * .65f)) { append("¥") }
+            append(text.removePrefix("¥"))
+        }, style = fitted, color = color, maxLines = 1, softWrap = false)
+    }
 }
 
 @Composable
