@@ -389,10 +389,11 @@ fun TransactionDetailScreen(state: MainUiState, id: Long, onBack: () -> Unit, vm
     var amount by rememberSaveable(transaction.id) { mutableStateOf(transaction.amountCents.yuanInput()) }
     var note by rememberSaveable(transaction.id) { mutableStateOf(transaction.note.orEmpty()) }
     var editCategoryId by rememberSaveable(transaction.id) { mutableStateOf(transaction.categoryId) }
-    var editDate by remember(transaction.id) { mutableStateOf(transaction.date(ZoneId.systemDefault())) }
+    var editEpochDay by rememberSaveable(transaction.id) { mutableLongStateOf(transaction.date(ZoneId.systemDefault()).toEpochDay()) }
+    val editDate = LocalDate.ofEpochDay(editEpochDay)
     var showEditDatePicker by remember { mutableStateOf(false) }
     val editDatePickerState = rememberDatePickerState(initialSelectedDateMillis = editDate.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli())
-    var confirmDelete by remember { mutableStateOf(false) }
+    var confirmDelete by rememberSaveable { mutableStateOf(false) }
     SimplePage("账单详情", onBack) {
         Text(transaction.type.label(), style = MaterialTheme.typography.titleMedium)
         if (editing) {
@@ -412,10 +413,11 @@ fun TransactionDetailScreen(state: MainUiState, id: Long, onBack: () -> Unit, vm
                 else {
                     val oldTime = transaction.occurredAt.atZone(ZoneId.systemDefault()).toLocalTime()
                     val occurredAt = editDate.atTime(oldTime).atZone(ZoneId.systemDefault()).toInstant()
-                    vm.updateTransaction(transaction.id, transaction.type, cents, editCategoryId, note, occurredAt, transaction.incomeAllocation)
-                    editing = false
+                    vm.updateTransaction(transaction.id, transaction.type, cents, editCategoryId, note, occurredAt, transaction.incomeAllocation) { saved ->
+                        if (saved) editing = false
+                    }
                 }
-            }, modifier = Modifier.fillMaxWidth(), reduceMotion = state.reduceMotion) { Text("保存修改") }
+            }, modifier = Modifier.fillMaxWidth(), enabled = !state.busy, reduceMotion = state.reduceMotion) { Text("保存修改") }
         } else {
             AmountText(transaction.amountCents, large = true)
             Text(state.categories.firstOrNull { it.id == transaction.categoryId }?.name ?: "未分类")
@@ -428,11 +430,15 @@ fun TransactionDetailScreen(state: MainUiState, id: Long, onBack: () -> Unit, vm
         }
     }
     if (confirmDelete) YuliangConfirmDialog("删除这笔账单？", "删除后预算与统计会立即重新计算，此操作无法撤销。", "删除",
-        onConfirm = { vm.deleteTransaction(id); confirmDelete = false; onBack() }, onDismiss = { confirmDelete = false }, destructive = true)
+        onConfirm = {
+            if (!state.busy) vm.deleteTransaction(id) { deleted ->
+                if (deleted) { confirmDelete = false; onBack() }
+            }
+        }, onDismiss = { confirmDelete = false }, destructive = true)
     if (showEditDatePicker) DatePickerDialog(
         onDismissRequest = { showEditDatePicker = false },
         confirmButton = { TextButton(onClick = {
-            editDatePickerState.selectedDateMillis?.let { editDate = Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate() }
+            editDatePickerState.selectedDateMillis?.let { editEpochDay = Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate().toEpochDay() }
             showEditDatePicker = false
         }) { Text("确定") } },
         dismissButton = { TextButton(onClick = { showEditDatePicker = false }) { Text("取消") } },

@@ -97,11 +97,11 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
-    fun updateTransaction(id: Long, type: TransactionType, amountCents: Long, categoryId: Long?, note: String?, occurredAt: Instant, allocation: IncomeAllocation?) = action("账单已更新") {
+    fun updateTransaction(id: Long, type: TransactionType, amountCents: Long, categoryId: Long?, note: String?, occurredAt: Instant, allocation: IncomeAllocation?, onResult: (Boolean) -> Unit = {}) = action("账单已更新", onResult) {
         container.ledgerRepository.update(Transaction(id = id, type = type, amountCents = amountCents, occurredAt = occurredAt, incomeAllocation = allocation, categoryId = categoryId, note = note))
     }
 
-    fun deleteTransaction(id: Long) = action("账单已删除") { container.ledgerRepository.delete(id) }
+    fun deleteTransaction(id: Long, onResult: (Boolean) -> Unit = {}) = action("账单已删除", onResult) { container.ledgerRepository.delete(id) }
     fun addCategory(name: String, icon: String, type: TransactionType) = action("分类已添加") { container.categoryRepository.add(name, icon, type) }
     fun archiveCategory(id: Long) = action("分类已归档，历史账单仍会保留") { container.categoryRepository.archive(id) }
     fun setReduceMotion(value: Boolean) = action(null) { container.settings.setReduceMotion(value) }
@@ -137,17 +137,20 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
 
     fun showMessage(message: String) { _messages.tryEmit(message) }
 
-    private fun action(success: String?, block: suspend () -> Unit) {
+    private fun action(success: String?, onResult: (Boolean) -> Unit = {}, block: suspend () -> Unit) {
         viewModelScope.launch {
             busy.value = true
-            try {
+            val completed = try {
                 block()
                 if (success != null) _messages.emit(success)
+                true
             } catch (error: Exception) {
                 _messages.emit(error.message ?: "操作失败，请稍后重试")
+                false
             } finally {
                 busy.value = false
             }
+            onResult(completed)
         }
     }
 
