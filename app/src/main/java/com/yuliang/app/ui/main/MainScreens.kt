@@ -9,11 +9,9 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.snap
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
@@ -32,7 +30,6 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
@@ -465,24 +462,12 @@ fun QuickRecordPanel(state: MainUiState, vm: MainViewModel, onDismiss: () -> Uni
     val impact = if (type == TransactionType.EXPENSE && cents != null && ready != null) TransactionImpactCalculator.afterExpense(ready.budget.todayRemainingCents, cents) else null
     Surface(
         color = MaterialTheme.colorScheme.surface,
-        tonalElevation = YuliangElevation.floating,
-        shadowElevation = YuliangElevation.dialog,
-        shape = YuliangShapes.sheet,
-        modifier = Modifier.fillMaxWidth().heightIn(max = LocalConfiguration.current.screenHeightDp.dp * .86f)
-            .padding(Spacing.compact).animateContentSize(tween(if (state.reduceMotion) 0 else MotionTokens.Slow)),
+        tonalElevation = 8.dp,
+        shadowElevation = 12.dp,
+        shape = YuliangShapes.hero,
+        modifier = Modifier.fillMaxWidth().padding(Spacing.compact).animateContentSize(tween(if (state.reduceMotion) 0 else MotionTokens.Slow)),
     ) {
-        Column(Modifier.verticalScroll(rememberScrollState()).padding(Spacing.content), verticalArrangement = Arrangement.spacedBy(Spacing.compact)) {
-            var sheetDrag by remember { mutableFloatStateOf(0f) }
-            Box(Modifier.fillMaxWidth().height(Spacing.large).pointerInput(onDismiss) {
-                detectVerticalDragGestures(
-                    onVerticalDrag = { _, delta -> sheetDrag = (sheetDrag + delta).coerceAtLeast(0f) },
-                    onDragEnd = { if (sheetDrag > 100.dp.toPx()) onDismiss(); sheetDrag = 0f },
-                    onDragCancel = { sheetDrag = 0f },
-                )
-            }, contentAlignment = Alignment.Center) {
-                Box(Modifier.width(Spacing.spacious).height(Spacing.tiny)
-                    .clip(YuliangShapes.pill).background(MaterialTheme.colorScheme.outlineVariant))
-            }
+        Column(Modifier.padding(Spacing.content), verticalArrangement = Arrangement.spacedBy(Spacing.compact)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Text("记一笔", style = MaterialTheme.typography.titleLarge)
                 QuietActionButton(onClick = onDismiss) { Text("关闭") }

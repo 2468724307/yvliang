@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -64,11 +63,20 @@ fun YuliangBottomSheet(
         enter = fadeIn(tween(if (reduceMotion) 0 else MotionTokens.Medium)),
         exit = fadeOut(tween(if (reduceMotion) 0 else MotionTokens.Fast)),
     ) {
-        Column(Modifier.fillMaxSize().background(Color.Black.copy(alpha = .38f))) {
-            Spacer(Modifier.fillMaxWidth().weight(1f).clickable { onDismiss() })
+        Box(Modifier.fillMaxSize()) {
+            Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = .38f)).clickable { onDismiss() })
+            var dragged by remember { mutableFloatStateOf(0f) }
             Column(
-                modifier = Modifier.fillMaxWidth().wrapContentHeight()
+                modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().wrapContentHeight()
                     .imePadding().navigationBarsPadding()
+                    .graphicsLayer { translationY = dragged }
+                    .pointerInput(visible) {
+                        detectVerticalDragGestures(
+                            onVerticalDrag = { _, delta -> dragged = (dragged + delta).coerceAtLeast(0f) },
+                            onDragEnd = { if (dragged > 100.dp.toPx()) onDismiss(); dragged = 0f },
+                            onDragCancel = { dragged = 0f },
+                        )
+                    }
                     .padding(PaddingValues(horizontal = 20.dp, vertical = 12.dp)),
                 content = content,
             )

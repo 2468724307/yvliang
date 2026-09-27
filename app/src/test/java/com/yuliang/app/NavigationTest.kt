@@ -6,7 +6,6 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
@@ -51,6 +50,7 @@ class NavigationTest {
         compose.onNodeWithTag("open_record").assertIsDisplayed().performClick()
         compose.onNodeWithTag("record_amount").assertIsDisplayed()
         compose.onNodeWithText("关闭").performClick()
+        compose.waitForIdle()
         compose.waitUntil(timeoutMillis = 5_000) {
             compose.onAllNodesWithTag("open_record").fetchSemanticsNodes().isNotEmpty()
         }
@@ -60,20 +60,12 @@ class NavigationTest {
     @Test fun quickRecordReturnsAfterPersistingToLedger() {
         compose.onNodeWithTag("open_record").performClick()
         compose.onNodeWithTag("record_amount").performTextInput("12.34")
-        compose.onNodeWithTag("save_record").performScrollTo()
         compose.onNodeWithTag("save_record").performClick()
         compose.waitUntil(timeoutMillis = 5_000) {
             compose.onAllNodesWithTag("open_record").fetchSemanticsNodes().isNotEmpty()
         }
         compose.onNodeWithText("账单").performClick()
-        compose.waitUntil(timeoutMillis = 10_000) {
-            try {
-                compose.onNodeWithTag("bills_list").performScrollToNode(hasText("−¥12.34"))
-                true
-            } catch (_: AssertionError) {
-                false // Room emits the saved transaction after the sheet closes.
-            }
-        }
+        compose.onNodeWithTag("bills_list").performScrollToNode(hasText("−¥12.34"))
         compose.onNodeWithText("−¥12.34").assertIsDisplayed()
     }
 
