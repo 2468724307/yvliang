@@ -17,6 +17,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.*
@@ -151,6 +152,7 @@ fun HomeScreen(state: MainUiState, onPlan: () -> Unit, onBills: () -> Unit, onTr
 
 @Composable
 fun BillsScreen(state: MainUiState, onTransaction: (Long) -> Unit) {
+    val listState = rememberSaveable(saver = LazyListState.Saver) { LazyListState() }
     var query by rememberSaveable { mutableStateOf("") }
     var type by rememberSaveable { mutableStateOf<TransactionType?>(null) }
     var categoryId by rememberSaveable { mutableStateOf<Long?>(null) }
@@ -171,7 +173,7 @@ fun BillsScreen(state: MainUiState, onTransaction: (Long) -> Unit) {
     val grouped = filtered.groupBy { it.date(ZoneId.systemDefault()) }.toSortedMap(reverseOrder())
     LazyColumn(
         modifier = Modifier.fillMaxSize().testTag("bills_list"),
-        state = rememberLazyListState(),
+        state = listState,
         contentPadding = PaddingValues(Spacing.content, Spacing.content, Spacing.content, 104.dp),
         verticalArrangement = Arrangement.spacedBy(Spacing.compact),
     ) {

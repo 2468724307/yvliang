@@ -9,6 +9,10 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
+import com.yuliang.app.domain.model.Transaction
+import com.yuliang.app.domain.model.TransactionType
+import kotlinx.coroutines.runBlocking
+import java.time.Instant
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -77,5 +81,24 @@ class NavigationTest {
             compose.onAllNodesWithTag("open_record").fetchSemanticsNodes().isNotEmpty()
         }
         compose.onNodeWithTag("open_record").assertExists()
+    }
+
+    @Test fun returningFromDetailKeepsBillSearchAndScroll() {
+        val ledger = (compose.activity.application as YuliangApplication).container.ledgerRepository
+        runBlocking {
+            repeat(16) { index ->
+                ledger.add(Transaction(type = TransactionType.EXPENSE, amountCents = 100L + index,
+                    occurredAt = Instant.now().minusSeconds(index * 60L), note = "条目 $index"))
+            }
+        }
+        compose.onNodeWithText("账单").performClick()
+        compose.onNodeWithText("搜索备注或分类").performTextInput("条目")
+        compose.onNodeWithTag("bills_list").performScrollToNode(hasText("条目 12"))
+        compose.onNodeWithText("条目 12").performClick()
+        compose.onNodeWithText("账单详情").assertIsDisplayed()
+        compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
+        compose.waitForIdle()
+        compose.onNodeWithText("全部账单").assertIsDisplayed()
+        compose.onNodeWithText("条目 12").assertIsDisplayed()
     }
 }
