@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -31,12 +32,12 @@ fun MonthlyPlanScreen(vm: PlanViewModel, onBack: () -> Unit) {
     val state by vm.state.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
     LaunchedEffect(state.message) { state.message?.let { snackbar.showSnackbar(it); vm.clearMessage() } }
-    var base by remember(state.plan) { mutableStateOf(state.plan?.baseIncomeCents?.toYuan() ?: "") }
-    var saving by remember(state.plan) { mutableStateOf(state.plan?.savingGoalCents?.toYuan() ?: "") }
-    var reserve by remember(state.plan) { mutableStateOf(state.plan?.safetyReserveCents?.toYuan() ?: "0") }
+    var base by rememberSaveable(state.plan) { mutableStateOf(state.plan?.baseIncomeCents?.toYuan() ?: "") }
+    var saving by rememberSaveable(state.plan) { mutableStateOf(state.plan?.savingGoalCents?.toYuan() ?: "") }
+    var reserve by rememberSaveable(state.plan) { mutableStateOf(state.plan?.safetyReserveCents?.toYuan() ?: "") }
     Scaffold(containerColor = MaterialTheme.colorScheme.background, topBar = { SimpleTopBar("本月计划", onBack) }, snackbarHost = { YuliangSnackbarHost(snackbar) }) { padding ->
         Column(Modifier.padding(padding).verticalScroll(rememberScrollState()).padding(Spacing.content), verticalArrangement = Arrangement.spacedBy(Spacing.medium)) {
-            Text("存钱目标和安全余额会在月初立即预留。", style = MaterialTheme.typography.bodyMedium)
+            Text("只需填写本月生活费；存钱目标和安全余额可留空，填写后会从可用预算中预留。", style = MaterialTheme.typography.bodyMedium)
             MoneyField("本月生活费", base) { base = it }
             MoneyField("存钱目标", saving) { saving = it }
             MoneyField("安全余额", reserve) { reserve = it }
@@ -45,7 +46,7 @@ fun MonthlyPlanScreen(vm: PlanViewModel, onBack: () -> Unit) {
                 AmountText(it.monthlySpendableCents, headline = true)
             } }
             PrimaryActionButton(enabled = !state.saving, onClick = {
-                val values = listOf(base, saving, reserve).map(::yuanToCentsOrNull)
+                val values = listOf(base, saving.ifBlank { "0" }, reserve.ifBlank { "0" }).map(::yuanToCentsOrNull)
                 if (values.all { it != null }) vm.savePlan(values[0]!!, values[1]!!, values[2]!!)
                 else vm.showInputError("请填写有效金额，最多保留两位小数")
             }, modifier = Modifier.fillMaxWidth()) { Text(if (state.saving) "保存中" else "保存计划") }

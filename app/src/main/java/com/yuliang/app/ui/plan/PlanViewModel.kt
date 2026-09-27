@@ -48,8 +48,9 @@ class PlanViewModel(private val container: AppContainer) : ViewModel() {
     fun showInputError(message: String) { status.value = false to message }
 
     private fun launchAction(success: String, block: suspend () -> Unit) {
+        if (status.value.first) return
+        status.value = true to null
         viewModelScope.launch {
-            status.value = true to null
             status.value = try { block(); false to success } catch (e: IllegalArgumentException) { false to (e.message ?: "输入有误") }
             catch (_: Exception) { false to "保存失败，请稍后重试" }
         }
