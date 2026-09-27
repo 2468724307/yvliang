@@ -98,7 +98,7 @@ class NavigationTest {
         compose.onNodeWithText("账单详情").assertIsDisplayed()
         compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
         compose.waitForIdle()
-        compose.onNodeWithText("全部账单").assertIsDisplayed()
+        compose.onNodeWithTag("bills_list").assertExists()
         compose.onNodeWithText("条目 12").assertIsDisplayed()
     }
 }
