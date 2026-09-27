@@ -442,14 +442,15 @@ fun TransactionDetailScreen(state: MainUiState, id: Long, onBack: () -> Unit, vm
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QuickRecordPanel(state: MainUiState, vm: MainViewModel, onDismiss: () -> Unit) {
-    var amount by remember { mutableStateOf("") }
+    var amount by rememberSaveable { mutableStateOf("") }
     var saving by remember { mutableStateOf(false) }
-    var categoryId by remember { mutableStateOf<Long?>(state.categories.firstOrNull { it.isEnabled && it.type == TransactionType.EXPENSE }?.id) }
-    var showMore by remember { mutableStateOf(false) }
-    var note by remember { mutableStateOf("") }
-    var type by remember { mutableStateOf(TransactionType.EXPENSE) }
-    var allocation by remember { mutableStateOf(IncomeAllocation.SPENDABLE) }
-    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+    var categoryId by rememberSaveable { mutableStateOf<Long?>(state.categories.firstOrNull { it.isEnabled && it.type == TransactionType.EXPENSE }?.id) }
+    var showMore by rememberSaveable { mutableStateOf(false) }
+    var note by rememberSaveable { mutableStateOf("") }
+    var type by rememberSaveable { mutableStateOf(TransactionType.EXPENSE) }
+    var allocation by rememberSaveable { mutableStateOf(IncomeAllocation.SPENDABLE) }
+    var selectedEpochDay by rememberSaveable { mutableLongStateOf(LocalDate.now().toEpochDay()) }
+    val selectedDate = LocalDate.ofEpochDay(selectedEpochDay)
     var showDatePicker by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState(
         initialSelectedDateMillis = selectedDate.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli(),
@@ -517,7 +518,7 @@ fun QuickRecordPanel(state: MainUiState, vm: MainViewModel, onDismiss: () -> Uni
     if (showDatePicker) DatePickerDialog(
         onDismissRequest = { showDatePicker = false },
         confirmButton = { TextButton(onClick = {
-            datePickerState.selectedDateMillis?.let { selectedDate = Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate() }
+            datePickerState.selectedDateMillis?.let { selectedEpochDay = Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate().toEpochDay() }
             showDatePicker = false
         }) { Text("确定") } },
         dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text("取消") } },

@@ -1,6 +1,7 @@
 package com.yuliang.app
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -100,5 +101,12 @@ class NavigationTest {
         compose.waitForIdle()
         compose.onNodeWithTag("bills_list").assertExists()
         compose.onNodeWithText("条目 12").assertIsDisplayed()
+    }
+
+    @Test fun quickRecordDraftSurvivesActivityRecreation() {
+        compose.onNodeWithTag("open_record").performClick()
+        compose.onNodeWithTag("record_amount").performTextInput("12.34")
+        compose.activityRule.scenario.recreate()
+        compose.onNodeWithTag("record_amount").assertTextContains("12.34")
     }
 }
