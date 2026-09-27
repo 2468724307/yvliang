@@ -68,7 +68,7 @@ fun HomeScreen(state: MainUiState, onPlan: () -> Unit, onBills: () -> Unit, onTr
             DashboardResult.NoPlan -> item {
                 DataCard(Modifier.fillMaxWidth()) {
                         Text("先建立本月计划", style = MaterialTheme.typography.titleLarge)
-                        Text("填入生活费、存钱目标和安全余额后，余量才能计算今天还能花多少。")
+                        Text("先填本月生活费即可查看预算；存钱目标和安全余额可以之后再补。")
                         PrimaryActionButton(onPlan, Modifier.fillMaxWidth(), reduceMotion = state.reduceMotion) { Text("开始设置") }
                 }
             }
@@ -85,12 +85,6 @@ fun HomeScreen(state: MainUiState, onPlan: () -> Unit, onBills: () -> Unit, onTr
                                 }
                                 Text(dashboard.budget.riskText(), fontWeight = FontWeight.Medium, color = Color.White)
                             }
-                    }
-                }
-                item {
-                    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.compact)) {
-                        MetricCard("本周剩余", dashboard.budget.weekRemainingCents.money(), Modifier.weight(1f))
-                        MetricCard("预计月底", dashboard.budget.prediction.label(), Modifier.weight(1f))
                     }
                 }
                 item {
@@ -129,6 +123,12 @@ fun HomeScreen(state: MainUiState, onPlan: () -> Unit, onBills: () -> Unit, onTr
                             ) {
                                 Text(dashboard.budget.riskText(), Modifier.padding(Spacing.compact), color = MaterialTheme.colorScheme.onSurface)
                             }
+                    }
+                }
+                item {
+                    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.compact)) {
+                        MetricCard("本周剩余", dashboard.budget.weekRemainingCents.money(), Modifier.weight(1f))
+                        MetricCard("预计月底", dashboard.budget.prediction.label(), Modifier.weight(1f))
                     }
                 }
                 item {
