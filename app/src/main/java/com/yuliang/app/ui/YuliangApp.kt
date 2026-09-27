@@ -112,7 +112,7 @@ fun YuliangApp() {
             ) {
                 composable("home") { HomeScreen(effectiveState, { nav.navigate("plan") }, { nav.navigate("bills") }) { nav.navigate("transaction/$it") } }
                 composable("bills") { BillsScreen(effectiveState) { nav.navigate("transaction/$it") } }
-                composable("statistics") { StatisticsScreen(effectiveState) }
+                composable("statistics") { StatisticsScreen(effectiveState, mainVm::setStatisticsPeriod) }
                 composable("profile") { ProfileScreen(effectiveState, { nav.navigate("plan") }, { nav.navigate("fixed") }, { nav.navigate("categories") }, { nav.navigate("data") }, { nav.navigate("about") }, mainVm::setReduceMotion) }
                 composable("plan") { MonthlyPlanScreen(planVm) { nav.popBackStack() } }
                 composable("fixed") { FixedExpenseScreen(planVm) { nav.popBackStack() } }

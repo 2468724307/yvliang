@@ -36,6 +36,22 @@ class DashboardTest {
         assertEquals(budget.budgetRiskLevel, result.riskLevel)
     }
 
+    @Test fun sevenDayStatisticsUsesSamePeriodForTotalCategoriesAndTrendAcrossMonth() {
+        val now = LocalDate.of(2026, 10, 2)
+        val tx = listOf(
+            Transaction(1, TransactionType.EXPENSE, 1_000, LocalDate.of(2026, 9, 26).atStartOfDay(zone).toInstant(), categoryId = 4),
+            Transaction(2, TransactionType.EXPENSE, 2_000, LocalDate.of(2026, 9, 27).atStartOfDay(zone).toInstant(), categoryId = 4),
+            Transaction(3, TransactionType.EXPENSE, 3_000, now.atStartOfDay(zone).toInstant(), categoryId = 5),
+        )
+        val stats = StatisticsCalculator().calculate(tx, mapOf(4L to "学习", 5L to "餐饮"), null, now, zone, StatisticsPeriod.LAST_SEVEN_DAYS) as StatisticsResult.Content
+        assertEquals(5_000L, stats.totalExpenseCents)
+        assertEquals(5_000L, stats.categorySlices.sumOf { it.amountCents })
+        assertEquals(5_000L, stats.dailyTrend.sumOf { it.amountCents })
+        assertEquals(LocalDate.of(2026, 9, 26), stats.dailyTrend.first().date)
+        assertEquals(7, stats.dailyTrend.size)
+        assertNull(stats.prediction)
+    }
+
     @Test fun transactionImpactNeverShowsNegativeMainValue() {
         assertEquals(ExpenseImpact(0, 1_500), TransactionImpactCalculator.afterExpense(3_500, 5_000))
         assertEquals(ExpenseImpact(1_500, 0), TransactionImpactCalculator.afterExpense(3_500, 2_000))

@@ -212,7 +212,7 @@ fun BillsScreen(state: MainUiState, onTransaction: (Long) -> Unit) {
 private enum class BillDateFilter { ALL, THIS_MONTH, LAST_7_DAYS }
 
 @Composable
-fun StatisticsScreen(state: MainUiState) {
+fun StatisticsScreen(state: MainUiState, onPeriodChange: (StatisticsPeriod) -> Unit) {
     LazyColumn(
         state = rememberLazyListState(),
         modifier = Modifier.fillMaxSize(),
@@ -220,12 +220,18 @@ fun StatisticsScreen(state: MainUiState) {
         verticalArrangement = Arrangement.spacedBy(Spacing.medium),
     ) {
         item { Text("统计", style = MaterialTheme.typography.headlineLarge) }
+        item {
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.small)) {
+                FilterChip(state.statisticsPeriod == StatisticsPeriod.THIS_MONTH, { onPeriodChange(StatisticsPeriod.THIS_MONTH) }, { Text("本月") })
+                FilterChip(state.statisticsPeriod == StatisticsPeriod.LAST_SEVEN_DAYS, { onPeriodChange(StatisticsPeriod.LAST_SEVEN_DAYS) }, { Text("近 7 天") })
+            }
+        }
         when (val stats = state.statistics) {
-            StatisticsResult.Empty -> item { EmptyState("暂无统计数据", "本月还没有可统计的消费。记录几笔后，这里会显示分类与趋势。", Modifier.fillMaxWidth()) }
+            StatisticsResult.Empty -> item { EmptyState("暂无统计数据", "所选时间内还没有可统计的消费。记录几笔后，这里会显示分类与趋势。", Modifier.fillMaxWidth()) }
             is StatisticsResult.Content -> {
                 item {
                     DataCard(Modifier.fillMaxWidth()) {
-                        Text("本月支出", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(if (state.statisticsPeriod == StatisticsPeriod.THIS_MONTH) "本月支出" else "近 7 天支出", color = MaterialTheme.colorScheme.onSurfaceVariant)
                         RollingMoney(stats.totalExpenseCents, reduceMotion = state.reduceMotion, headline = true)
                         Text("最高消费分类：${stats.topCategory}；近期有效消费日日均 ${stats.recentDailyAverageCents.money()}。", style = YuliangTypography.bodyMedium)
                     }
@@ -244,7 +250,7 @@ fun StatisticsScreen(state: MainUiState) {
                         Text(stats.trendSummary(), style = YuliangTypography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
-                item {
+                if (state.statisticsPeriod == StatisticsPeriod.THIS_MONTH) item {
                     DataCard(Modifier.fillMaxWidth()) {
                         SectionHeader("预算判断")
                         Text(stats.prediction.label())

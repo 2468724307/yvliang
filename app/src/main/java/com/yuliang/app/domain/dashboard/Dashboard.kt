@@ -50,6 +50,7 @@ object TransactionImpactCalculator {
 
 data class CategorySlice(val categoryId: Long?, val label: String, val amountCents: Long, val fraction: Float)
 data class DailySpend(val date: LocalDate, val amountCents: Long)
+enum class StatisticsPeriod { THIS_MONTH, LAST_SEVEN_DAYS }
 
 sealed interface StatisticsResult {
     data object Empty : StatisticsResult
@@ -72,8 +73,13 @@ class StatisticsCalculator {
         budget: BudgetResult?,
         today: LocalDate,
         zoneId: ZoneId,
+        period: StatisticsPeriod = StatisticsPeriod.THIS_MONTH,
     ): StatisticsResult {
-        val expenses = transactions.filter(FixedExpenseManager::isCountedVariableExpense)
+        val periodStart = when (period) {
+            StatisticsPeriod.THIS_MONTH -> today.withDayOfMonth(1)
+            StatisticsPeriod.LAST_SEVEN_DAYS -> today.minusDays(6)
+        }
+        val expenses = transactions.filter { FixedExpenseManager.isCountedVariableExpense(it) && it.date(zoneId) in periodStart..today }
         if (expenses.isEmpty()) return StatisticsResult.Empty
         val total = expenses.fold(0L) { sum, item -> Math.addExact(sum, item.amountCents) }
         val byCategory = expenses.groupBy(Transaction::categoryId).mapValues { (_, items) -> items.fold(0L) { sum, item -> Math.addExact(sum, item.amountCents) } }
@@ -81,13 +87,13 @@ class StatisticsCalculator {
             CategorySlice(categoryId, categoryId?.let(categoryNames::get) ?: "未分类", amount, (amount.toDouble() / total.toDouble()).toFloat())
         }
         val byDay = expenses.groupBy { it.date(zoneId) }.mapValues { (_, items) -> items.sumOf(Transaction::amountCents) }
-        val monthStart = today.withDayOfMonth(1)
-        val dailyTrend = (0 until today.dayOfMonth).map { offset ->
-            val date = monthStart.plusDays(offset.toLong())
+        val dailyTrend = (0..java.time.temporal.ChronoUnit.DAYS.between(periodStart, today)).map { offset ->
+            val date = periodStart.plusDays(offset)
             DailySpend(date, byDay[date] ?: 0)
         }
         val activeRecentDays = byDay.entries.filter { !it.key.isAfter(today) }.sortedBy { it.key }.takeLast(7)
         val average = if (activeRecentDays.isEmpty()) 0 else activeRecentDays.sumOf { it.value } / activeRecentDays.size
-        return StatisticsResult.Content(total, slices, dailyTrend, slices.first().label, average, budget?.prediction, budget?.savingGoalOnTrack, budget?.budgetRiskLevel)
+        val periodBudget = budget.takeIf { period == StatisticsPeriod.THIS_MONTH }
+        return StatisticsResult.Content(total, slices, dailyTrend, slices.first().label, average, periodBudget?.prediction, periodBudget?.savingGoalOnTrack, periodBudget?.budgetRiskLevel)
     }
 }

@@ -18,6 +18,7 @@ data class ExportPayload(val name: String, val mimeType: String, val bytes: Byte
 data class MainUiState(
     val dashboard: DashboardResult = DashboardResult.NoPlan,
     val statistics: StatisticsResult = StatisticsResult.Empty,
+    val statisticsPeriod: StatisticsPeriod = StatisticsPeriod.THIS_MONTH,
     val transactions: List<Transaction> = emptyList(),
     val categories: List<Category> = emptyList(),
     val reduceMotion: Boolean = false,
@@ -30,6 +31,7 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
     private val today: LocalDate get() = LocalDate.now(zone)
     private val busy = MutableStateFlow(false)
     private val export = MutableStateFlow<ExportPayload?>(null)
+    private val statisticsPeriod = MutableStateFlow(StatisticsPeriod.THIS_MONTH)
     private val _messages = MutableSharedFlow<String>(extraBufferCapacity = 8)
     val messages = _messages.asSharedFlow()
     private var recording = false
@@ -52,7 +54,7 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
         Sources(plan, fixed, transactions, categories, reduceMotion)
     }
 
-    val state: StateFlow<MainUiState> = combine(sources, busy, export) { source, working, pendingExport ->
+    val state: StateFlow<MainUiState> = combine(sources, busy, export, statisticsPeriod) { source, working, pendingExport, period ->
         val currentMonth = source.transactions.filter { tx ->
             val date = tx.date(zone)
             date.year == today.year && date.monthValue == today.monthValue
@@ -61,7 +63,8 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
         val budget = (dashboard as? DashboardResult.Ready)?.budget
         MainUiState(
             dashboard = dashboard,
-            statistics = StatisticsCalculator().calculate(currentMonth, source.categories.associate { it.id to it.name }, budget, today, zone),
+            statistics = StatisticsCalculator().calculate(source.transactions, source.categories.associate { it.id to it.name }, budget, today, zone, period),
+            statisticsPeriod = period,
             transactions = source.transactions,
             categories = source.categories,
             reduceMotion = source.reduceMotion,
@@ -136,6 +139,7 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
     }
 
     fun showMessage(message: String) { _messages.tryEmit(message) }
+    fun setStatisticsPeriod(period: StatisticsPeriod) { statisticsPeriod.value = period }
 
     private fun action(success: String?, onResult: (Boolean) -> Unit = {}, block: suspend () -> Unit) {
         viewModelScope.launch {
