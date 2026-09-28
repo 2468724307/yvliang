@@ -20,6 +20,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.*
@@ -49,6 +52,14 @@ fun YuliangApp() {
     val application = LocalContext.current.applicationContext as YuliangApplication
     val mainVm: MainViewModel = viewModel(factory = MainViewModel.Factory(application.container))
     val planVm: PlanViewModel = viewModel(factory = PlanViewModel.Factory(application.container))
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner, mainVm, planVm) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) { mainVm.refreshDate(); planVm.refreshDate() }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
     val state by mainVm.state.collectAsStateWithLifecycle()
     val lowRamDevice = remember(application) {
         (application.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager).isLowRamDevice

@@ -10,6 +10,7 @@ import com.yuliang.app.data.repository.Category
 import com.yuliang.app.domain.dashboard.*
 import com.yuliang.app.domain.model.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.*
@@ -32,6 +33,7 @@ data class MainUiState(
 class MainViewModel(private val container: AppContainer) : ViewModel() {
     private val zone = ZoneId.systemDefault()
     private val today: LocalDate get() = LocalDate.now(zone)
+    private val calendarDay = MutableStateFlow(today)
     private val busy = MutableStateFlow(false)
     private val export = MutableStateFlow<ExportPayload?>(null)
     private val statisticsPeriod = MutableStateFlow(StatisticsPeriod.THIS_MONTH)
@@ -41,6 +43,7 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
     private var recording = false
 
     private data class Sources(
+        val date: LocalDate,
         val plan: MonthlyPlan?,
         val fixed: List<FixedExpense>,
         val transactions: List<Transaction>,
@@ -50,28 +53,28 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
     )
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    private val sources = reload.flatMapLatest { combine(
-        container.planRepository.observe(today.year, today.monthValue),
-        container.fixedExpenseRepository.observeMonth(today.year, today.monthValue),
+    private val sources = combine(calendarDay, reload) { day, _ -> day }.flatMapLatest { day -> combine(
+        container.planRepository.observe(day.year, day.monthValue),
+        container.fixedExpenseRepository.observeMonth(day.year, day.monthValue),
         container.ledgerRepository.observeAll(),
         container.categoryRepository.observeAll(),
         container.settings.reduceMotion,
     ) { plan, fixed, transactions, categories, reduceMotion ->
-        Sources(plan, fixed, transactions, categories, reduceMotion)
-    }.catch { error -> emit(Sources(null, emptyList(), emptyList(), emptyList(), false, error.message ?: "读取数据失败")) } }
+        Sources(day, plan, fixed, transactions, categories, reduceMotion)
+    }.catch { error -> emit(Sources(day, null, emptyList(), emptyList(), emptyList(), false, error.message ?: "读取数据失败")) } }
 
     val state: StateFlow<MainUiState> = combine(sources, busy, export, statisticsPeriod) { source, working, pendingExport, period ->
         val currentMonth = source.transactions.filter { tx ->
             val date = tx.date(zone)
-            date.year == today.year && date.monthValue == today.monthValue
+            date.year == source.date.year && date.monthValue == source.date.monthValue
         }
-        val dashboard = DashboardUseCase().execute(source.plan, currentMonth, source.fixed, today, zone)
+        val dashboard = DashboardUseCase().execute(source.plan, currentMonth, source.fixed, source.date, zone)
         val budget = (dashboard as? DashboardResult.Ready)?.budget
         MainUiState(
             isLoading = false,
             loadError = source.loadError,
             dashboard = dashboard,
-            statistics = StatisticsCalculator().calculate(source.transactions, source.categories.associate { it.id to it.name }, budget, today, zone, period),
+            statistics = StatisticsCalculator().calculate(source.transactions, source.categories.associate { it.id to it.name }, budget, source.date, zone, period),
             statisticsPeriod = period,
             transactions = source.transactions,
             categories = source.categories,
@@ -85,6 +88,13 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
         viewModelScope.launch {
             container.categoryRepository.ensureDefaults()
             container.fixedExpenseRepository.ensureMonthInstances(today.year, today.monthValue)
+        }
+        viewModelScope.launch {
+            while (true) {
+                val nextMidnight = today.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli()
+                delay((nextMidnight - System.currentTimeMillis()).coerceAtLeast(1_000L))
+                refreshDate()
+            }
         }
     }
 
@@ -152,6 +162,13 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
     fun showMessage(message: String) { _messages.tryEmit(message) }
     fun setStatisticsPeriod(period: StatisticsPeriod) { statisticsPeriod.value = period }
     fun retryLoad() { reload.value += 1 }
+    fun refreshDate() {
+        val current = today
+        if (calendarDay.value != current) {
+            calendarDay.value = current
+            viewModelScope.launch { container.fixedExpenseRepository.ensureMonthInstances(current.year, current.monthValue) }
+        }
+    }
 
     private fun action(success: String?, onResult: (Boolean) -> Unit = {}, block: suspend () -> Unit) {
         viewModelScope.launch {

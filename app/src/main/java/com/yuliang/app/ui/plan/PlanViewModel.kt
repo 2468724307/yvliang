@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.yuliang.app.AppContainer
 import com.yuliang.app.domain.budget.BudgetCalculator
 import com.yuliang.app.domain.model.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.*
@@ -20,26 +22,46 @@ data class PlanUiState(
 
 class PlanViewModel(private val container: AppContainer) : ViewModel() {
     private val zone = ZoneId.systemDefault()
-    private val today = LocalDate.now(zone)
-    private val year = today.year
-    private val month = today.monthValue
+    private val today: LocalDate get() = LocalDate.now(zone)
+    private val calendarDay = MutableStateFlow(today)
     private val status = MutableStateFlow<Pair<Boolean, String?>>(false to null)
-    private val plan = container.planRepository.observe(year, month)
-    private val fixed = container.fixedExpenseRepository.observeMonth(year, month)
-    private val transactions = container.ledgerRepository.observeMonth(year, month, zone)
+    private data class Sources(val date: LocalDate, val plan: MonthlyPlan?, val fixed: List<FixedExpense>, val transactions: List<Transaction>)
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val sources = calendarDay.flatMapLatest { day -> combine(
+        container.planRepository.observe(day.year, day.monthValue),
+        container.fixedExpenseRepository.observeMonth(day.year, day.monthValue),
+        container.ledgerRepository.observeMonth(day.year, day.monthValue, zone),
+    ) { p, f, t -> Sources(day, p, f, t) } }
 
-    val state: StateFlow<PlanUiState> = combine(plan, fixed, transactions, status) { p, f, t, s ->
-        PlanUiState(p, f, p?.let { BudgetCalculator().calculate(it, t, f, today, zone) }, s.first, s.second)
+    val state: StateFlow<PlanUiState> = combine(sources, status) { source, s ->
+        PlanUiState(source.plan, source.fixed, source.plan?.let { BudgetCalculator().calculate(it, source.transactions, source.fixed, source.date, zone) }, s.first, s.second)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), PlanUiState())
 
-    init { viewModelScope.launch { container.fixedExpenseRepository.ensureMonthInstances(year, month) } }
+    init {
+        viewModelScope.launch { container.fixedExpenseRepository.ensureMonthInstances(today.year, today.monthValue) }
+        viewModelScope.launch {
+            while (true) {
+                val nextMidnight = today.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli()
+                delay((nextMidnight - System.currentTimeMillis()).coerceAtLeast(1_000L))
+                refreshDate()
+            }
+        }
+    }
+
+    fun refreshDate() {
+        val current = today
+        if (calendarDay.value != current) {
+            calendarDay.value = current
+            viewModelScope.launch { container.fixedExpenseRepository.ensureMonthInstances(current.year, current.monthValue) }
+        }
+    }
 
     fun savePlan(baseCents: Long, savingCents: Long, reserveCents: Long) = launchAction("本月计划已保存") {
-        container.planRepository.save(MonthlyPlan(year = year, month = month, baseIncomeCents = baseCents, savingGoalCents = savingCents, safetyReserveCents = reserveCents, effectiveStartDate = today))
+        container.planRepository.save(MonthlyPlan(year = today.year, month = today.monthValue, baseIncomeCents = baseCents, savingGoalCents = savingCents, safetyReserveCents = reserveCents, effectiveStartDate = today))
     }
 
     fun addFixed(name: String, amountCents: Long, dueDay: Int) = launchAction("固定支出已加入本月") {
-        container.fixedExpenseRepository.addTemplateAndMonth(name, amountCents, dueDay, year, month)
+        container.fixedExpenseRepository.addTemplateAndMonth(name, amountCents, dueDay, today.year, today.monthValue)
     }
 
     fun skipFixed(id: Long) = launchAction("本月已跳过") { container.fixedExpenseRepository.setSkipped(id) }

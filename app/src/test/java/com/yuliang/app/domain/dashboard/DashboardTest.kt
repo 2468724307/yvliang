@@ -56,4 +56,16 @@ class DashboardTest {
         assertEquals(ExpenseImpact(0, 1_500), TransactionImpactCalculator.afterExpense(3_500, 5_000))
         assertEquals(ExpenseImpact(1_500, 0), TransactionImpactCalculator.afterExpense(3_500, 2_000))
     }
+
+    @Test fun editingAndDeletingExpenseKeepDashboardAndStatisticsInAgreement() {
+        val first = Transaction(1, TransactionType.EXPENSE, 1_000, date.atStartOfDay(zone).toInstant(), categoryId = 4)
+        val second = Transaction(2, TransactionType.EXPENSE, 2_000, date.atStartOfDay(zone).toInstant(), categoryId = 5)
+        for (ledger in listOf(listOf(first, second), listOf(first.copy(amountCents = 8_000), second), listOf(second))) {
+            val dashboard = DashboardUseCase().execute(plan, ledger, emptyList(), date, zone) as DashboardResult.Ready
+            val statistics = StatisticsCalculator().calculate(ledger, mapOf(4L to "学习", 5L to "餐饮"), dashboard.budget, date, zone) as StatisticsResult.Content
+            assertEquals(dashboard.monthSpentCents, statistics.totalExpenseCents)
+            assertEquals(statistics.totalExpenseCents, statistics.categorySlices.sumOf { it.amountCents })
+            assertEquals(statistics.totalExpenseCents, statistics.dailyTrend.sumOf { it.amountCents })
+        }
+    }
 }
