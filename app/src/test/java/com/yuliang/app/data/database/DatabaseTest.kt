@@ -118,7 +118,7 @@ class DatabaseTest {
         val ledger = RoomLedgerRepository(db.ledgerDao())
         planRepo.save(MonthlyPlan(year = 2026, month = 9, baseIncomeCents = 100_000,
             savingGoalCents = 10_000, safetyReserveCents = 0, effectiveStartDate = date.withDayOfMonth(1)))
-        val categoryId = db.categoryDao().insert(CategoryEntity(name = "餐饮", icon = "meal", type = "EXPENSE", sortOrder = 0))
+        val categoryId = db.categoryDao().insert(CategoryEntity(name = "餐饮", icon = "meal", type = "EXPENSE", sortOrder = 0, isSystem = false))
         val at = date.atTime(12, 0).atZone(zone).toInstant()
 
         suspend fun reconcile(expected: Long): Long {
