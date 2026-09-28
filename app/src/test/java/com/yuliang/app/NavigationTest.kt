@@ -16,6 +16,7 @@ import com.yuliang.app.domain.model.TransactionType
 import kotlinx.coroutines.runBlocking
 import java.time.Instant
 import org.junit.Rule
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -25,6 +26,12 @@ import org.robolectric.annotation.Config
 @Config(sdk = [34])
 class NavigationTest {
     @get:Rule val compose = createAndroidComposeRule<MainActivity>()
+
+    @Before fun awaitInitialData() {
+        compose.waitUntil(timeoutMillis = 10_000) {
+            compose.onAllNodesWithText("余量").fetchSemanticsNodes().isNotEmpty()
+        }
+    }
 
     @Test fun launchAndMainNavigationWork() {
         compose.onNodeWithText("余量").assertIsDisplayed()
