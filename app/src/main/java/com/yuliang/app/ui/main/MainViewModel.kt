@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.*
 
-data class ExportPayload(val name: String, val mimeType: String, val bytes: ByteArray)
+data class ExportPayload(val name: String, val mimeType: String, val bytes: ByteArray, val requestId: Long = System.nanoTime())
 
 data class MainUiState(
     val isLoading: Boolean = true,

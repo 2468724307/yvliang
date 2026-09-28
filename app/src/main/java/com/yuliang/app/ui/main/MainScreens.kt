@@ -541,15 +541,16 @@ fun QuickRecordPanel(state: MainUiState, vm: MainViewModel, onDismiss: () -> Uni
 fun DataManagementScreen(state: MainUiState, vm: MainViewModel, onBack: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var pendingShare by remember { mutableStateOf(false) }
+    var pendingShare by rememberSaveable { mutableStateOf(false) }
+    var launchedExportId by rememberSaveable { mutableStateOf<Long?>(null) }
     var restoreUri by remember { mutableStateOf<android.net.Uri?>(null) }
-    val create = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument(state.export?.mimeType ?: "application/octet-stream")) { uri ->
+    fun handleExportResult(uri: android.net.Uri?) {
         val payload = state.export
         if (uri == null || payload == null) {
             vm.exportHandled()
             pendingShare = false
             if (uri == null) vm.showMessage("已取消保存")
-            return@rememberLauncherForActivityResult
+            return
         }
         scope.launch {
             val result = vm.writeExportAwait(context.contentResolver, uri, payload)
@@ -560,8 +561,17 @@ fun DataManagementScreen(state: MainUiState, vm: MainViewModel, onBack: () -> Un
             pendingShare = false
         }
     }
+    val jsonCreate = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json"), ::handleExportResult)
+    val csvCreate = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/csv"), ::handleExportResult)
     val open = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) restoreUri = uri }
-    LaunchedEffect(state.export) { state.export?.let { create.launch(it.name) } }
+    LaunchedEffect(state.export) {
+        val payload = state.export
+        if (payload == null) launchedExportId = null
+        else if (launchedExportId != payload.requestId) {
+            launchedExportId = payload.requestId
+            if (payload.mimeType == "text/csv") csvCreate.launch(payload.name) else jsonCreate.launch(payload.name)
+        }
+    }
     SimplePage("数据管理", onBack) {
         Text("完整备份包含计划、分类、固定支出和账单。恢复会覆盖当前数据。", color = MaterialTheme.colorScheme.onSurfaceVariant)
         PrimaryActionButton(onClick = { pendingShare = false; vm.prepareBackup() }, enabled = !state.busy, modifier = Modifier.fillMaxWidth()) { Text("保存完整备份（JSON）") }
