@@ -11,8 +11,6 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
-import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.printToString
 import com.yuliang.app.domain.model.Transaction
 import com.yuliang.app.domain.model.TransactionType
 import kotlinx.coroutines.runBlocking
@@ -48,8 +46,6 @@ class NavigationTest {
 
     @Test fun systemBackPopsPlanPage() {
         compose.onNodeWithText("开始设置").performClick()
-        compose.waitForIdle()
-        println("PLAN_NAV_TREE: " + compose.onRoot().printToString())
         compose.waitUntil(timeoutMillis = 5_000) {
             compose.onAllNodesWithText("本月计划").fetchSemanticsNodes().isNotEmpty()
         }

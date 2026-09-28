@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -77,7 +78,7 @@ fun YuliangApp() {
             containerColor = MaterialTheme.colorScheme.background,
             snackbarHost = { YuliangSnackbarHost(snackbar) },
             bottomBar = {
-                if (isMain) NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
+                if (isMain && !effectiveState.isLoading && effectiveState.loadError == null) NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
                     mainDestinations.forEach { destination ->
                         NavigationBarItem(
                             selected = currentRoute == destination.route,
@@ -117,7 +118,7 @@ fun YuliangApp() {
             NavHost(
                 navController = nav,
                 startDestination = "home",
-                modifier = Modifier.padding(padding),
+                modifier = Modifier.padding(padding).then(if (effectiveState.isLoading || effectiveState.loadError != null) Modifier.clearAndSetSemantics { } else Modifier),
                 enterTransition = { fadeIn(tween(transitionMs)) + scaleIn(tween(transitionMs), initialScale = .985f) },
                 exitTransition = { fadeOut(tween(transitionMs / 2)) + scaleOut(tween(transitionMs / 2), targetScale = 1.01f) },
                 popEnterTransition = { fadeIn(tween(transitionMs)) + scaleIn(tween(transitionMs), initialScale = 1.01f) },
