@@ -28,6 +28,7 @@ import com.yuliang.app.ui.main.*
 import com.yuliang.app.ui.components.YuliangBottomSheet
 import com.yuliang.app.ui.components.YuliangIcon
 import com.yuliang.app.ui.components.YuliangSnackbarHost
+import com.yuliang.app.ui.components.EmptyState
 import com.yuliang.app.ui.plan.FixedExpenseScreen
 import com.yuliang.app.ui.plan.MonthlyPlanScreen
 import com.yuliang.app.ui.plan.PlanViewModel
@@ -90,7 +91,7 @@ fun YuliangApp() {
                 }
             },
             floatingActionButton = {
-                if (isMain && !recordOpen) ExtendedFloatingActionButton(
+                if (isMain && !recordOpen && !effectiveState.isLoading && effectiveState.loadError == null) ExtendedFloatingActionButton(
                     onClick = { recordOpen = true },
                     modifier = Modifier.testTag("open_record"),
                     text = { Text("记一笔") },
@@ -101,6 +102,7 @@ fun YuliangApp() {
             },
         ) { padding ->
             val transitionMs = if (effectiveState.reduceMotion) 0 else MotionTokens.Medium
+            Box(Modifier.fillMaxSize()) {
             NavHost(
                 navController = nav,
                 startDestination = "home",
@@ -122,6 +124,15 @@ fun YuliangApp() {
                 composable("transaction/{id}") { entry ->
                     TransactionDetailScreen(effectiveState, entry.arguments?.getString("id")?.toLongOrNull() ?: -1, { nav.popBackStack() }, mainVm)
                 }
+            }
+            if (effectiveState.isLoading || effectiveState.loadError != null) Surface(Modifier.fillMaxSize().padding(padding), color = MaterialTheme.colorScheme.background) {
+                Box(contentAlignment = Alignment.Center) {
+                    if (effectiveState.isLoading) Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        CircularProgressIndicator()
+                        Text("正在读取数据")
+                    } else EmptyState("读取失败", effectiveState.loadError ?: "读取数据失败", action = "重试", onAction = mainVm::retryLoad)
+                }
+            }
             }
         }
 

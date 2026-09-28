@@ -16,6 +16,8 @@ import java.time.*
 data class ExportPayload(val name: String, val mimeType: String, val bytes: ByteArray)
 
 data class MainUiState(
+    val isLoading: Boolean = true,
+    val loadError: String? = null,
     val dashboard: DashboardResult = DashboardResult.NoPlan,
     val statistics: StatisticsResult = StatisticsResult.Empty,
     val statisticsPeriod: StatisticsPeriod = StatisticsPeriod.THIS_MONTH,
@@ -32,6 +34,7 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
     private val busy = MutableStateFlow(false)
     private val export = MutableStateFlow<ExportPayload?>(null)
     private val statisticsPeriod = MutableStateFlow(StatisticsPeriod.THIS_MONTH)
+    private val reload = MutableStateFlow(0)
     private val _messages = MutableSharedFlow<String>(extraBufferCapacity = 8)
     val messages = _messages.asSharedFlow()
     private var recording = false
@@ -42,9 +45,11 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
         val transactions: List<Transaction>,
         val categories: List<Category>,
         val reduceMotion: Boolean,
+        val loadError: String? = null,
     )
 
-    private val sources = combine(
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val sources = reload.flatMapLatest { combine(
         container.planRepository.observe(today.year, today.monthValue),
         container.fixedExpenseRepository.observeMonth(today.year, today.monthValue),
         container.ledgerRepository.observeAll(),
@@ -52,7 +57,7 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
         container.settings.reduceMotion,
     ) { plan, fixed, transactions, categories, reduceMotion ->
         Sources(plan, fixed, transactions, categories, reduceMotion)
-    }
+    }.catch { error -> emit(Sources(null, emptyList(), emptyList(), emptyList(), false, error.message ?: "读取数据失败")) } }
 
     val state: StateFlow<MainUiState> = combine(sources, busy, export, statisticsPeriod) { source, working, pendingExport, period ->
         val currentMonth = source.transactions.filter { tx ->
@@ -62,6 +67,8 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
         val dashboard = DashboardUseCase().execute(source.plan, currentMonth, source.fixed, today, zone)
         val budget = (dashboard as? DashboardResult.Ready)?.budget
         MainUiState(
+            isLoading = false,
+            loadError = source.loadError,
             dashboard = dashboard,
             statistics = StatisticsCalculator().calculate(source.transactions, source.categories.associate { it.id to it.name }, budget, today, zone, period),
             statisticsPeriod = period,
@@ -132,7 +139,7 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
         written
     }.onFailure {
         export.value = null
-        _messages.emit(it.message ?: "文件保存失败")
+        _messages.emit(if (it is SecurityException) "没有文件访问权限，请重新选择保存位置" else it.message ?: "文件保存失败")
     }
 
     fun restore(resolver: ContentResolver, uri: Uri) = action(null) {
@@ -143,6 +150,7 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
 
     fun showMessage(message: String) { _messages.tryEmit(message) }
     fun setStatisticsPeriod(period: StatisticsPeriod) { statisticsPeriod.value = period }
+    fun retryLoad() { reload.value += 1 }
 
     private fun action(success: String?, onResult: (Boolean) -> Unit = {}, block: suspend () -> Unit) {
         viewModelScope.launch {
@@ -152,7 +160,7 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
                 if (success != null) _messages.emit(success)
                 true
             } catch (error: Exception) {
-                _messages.emit(error.message ?: "操作失败，请稍后重试")
+                _messages.emit(if (error is SecurityException) "没有文件访问权限，请重新选择文件" else error.message ?: "操作失败，请稍后重试")
                 false
             } finally {
                 busy.value = false
