@@ -130,7 +130,10 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
         export.value = null
         _messages.emit("文件已保存（$written 字节）")
         written
-    }.onFailure { _messages.emit(it.message ?: "文件保存失败") }
+    }.onFailure {
+        export.value = null
+        _messages.emit(it.message ?: "文件保存失败")
+    }
 
     fun restore(resolver: ContentResolver, uri: Uri) = action(null) {
         val bytes = container.dataTransfer.read(resolver, uri)

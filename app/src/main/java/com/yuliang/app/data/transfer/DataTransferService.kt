@@ -69,16 +69,18 @@ class DataTransferService(private val db: YuliangDatabase, private val settings:
             ?: error("无法打开目标文件")
         val size = resolver.openInputStream(uri)?.use { input ->
             val buffer = ByteArray(8 * 1024)
-            var total = 0L
+            var total = 0
             while (true) {
                 val read = input.read(buffer)
                 if (read < 0) break
+                check(total <= bytes.size - read) { "文件内容校验失败" }
+                for (index in 0 until read) check(buffer[index] == bytes[total + index]) { "文件内容校验失败" }
                 total += read
             }
             total
-        } ?: 0
-        check(size > 0) { "文件写入后无法读取" }
-        TransferResult(size)
+        } ?: error("文件写入后无法读取")
+        check(size == bytes.size) { "文件内容校验失败" }
+        TransferResult(size.toLong())
     }
 
     suspend fun read(resolver: ContentResolver, uri: Uri): ByteArray = withContext(Dispatchers.IO) {

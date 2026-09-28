@@ -67,6 +67,7 @@ class DataTransferServiceTest {
         assertTrue(target.exists())
         assertEquals(target.length(), result.bytesWritten)
         assertTrue(result.bytesWritten > 0)
+        assertArrayEquals("{\"ok\":true}".toByteArray(), target.readBytes())
     }
 
     private suspend fun seed() {

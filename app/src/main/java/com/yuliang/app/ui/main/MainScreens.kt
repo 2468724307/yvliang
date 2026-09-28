@@ -545,7 +545,12 @@ fun DataManagementScreen(state: MainUiState, vm: MainViewModel, onBack: () -> Un
     var restoreUri by remember { mutableStateOf<android.net.Uri?>(null) }
     val create = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument(state.export?.mimeType ?: "application/octet-stream")) { uri ->
         val payload = state.export
-        if (uri == null || payload == null) { vm.exportHandled(); return@rememberLauncherForActivityResult }
+        if (uri == null || payload == null) {
+            vm.exportHandled()
+            pendingShare = false
+            if (uri == null) vm.showMessage("已取消保存")
+            return@rememberLauncherForActivityResult
+        }
         scope.launch {
             val result = vm.writeExportAwait(context.contentResolver, uri, payload)
             if (pendingShare && result.isSuccess) {
